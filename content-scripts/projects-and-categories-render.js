@@ -1,11 +1,21 @@
-if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
-    console.warn('Render script already loaded, skipping...');
-} else {
+(function () {
+    'use strict';
+
+    if (window.__ENTRY_RENDER_SCRIPT_ALREADY_RUN__) {
+        return;
+    }
     window.__RENDER_SCRIPT_ALREADY_RUN__ = true;
 
     const PROJECT_PARENT_SELECTOR = "[data-bind='foreach: visibleProjects']";
     const CATEGORIES_PARENT_SELECTOR = "[data-bind='foreach: visibleCategories']";
     const ITEM_SELECTOR = ".span2 .timesheetlistitem";
+
+    // Run this function as soon as the data is loaded from local storage
+    onDataLoaded.push(() => {
+        layoutProjects();
+        layoutCategories();
+        restyleProjectsAndCategories();
+    })
 
     if (document.readyState === 'interactive' || document.readyState === 'complete') {
         init();
@@ -16,11 +26,9 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
     }
 
     function init() {
-        chrome.storage.sync.get(STORAGE_KEY_PROJECTS, (data) => {
-            data = data.projects || [];
-            layoutProjects();
-            layoutCategories();
-            restyleProjectsAndCategories();
+        chrome.storage.sync.get(STORAGE_KEY_PROJECTS, (storeData) => {
+            data = storeData.projects || [];
+            onDataLoaded.forEach((fn) => fn())
         });
     }
 
@@ -38,15 +46,23 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
             });
 
             entity.addEventListener('click', () => {
-                activeProject = entity
+                setActiveProject(entity)
                 layoutCategories()
                 restyleProjectsAndCategories()
             });
-            
+
             if (entity.style.color == 'white') {
-                activeProject = entity
+                setActiveProject(entity)
             }
         });
+    }
+
+    function setActiveProject(project) {
+        activeProject = project
+    }
+
+    function setActiveCategory(category) {
+        activeCategory = category
     }
 
     function layoutCategories() {
@@ -66,13 +82,13 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
             });
 
             entity.addEventListener('click', () => {
-                activeCategory = entity;
+                setActiveCategory(entity)
                 // TODO: Restyle categories only
                 restyleProjectsAndCategories();
             });
 
             if (entity.style.color == 'white') {
-                activeCategory = entity
+                setActiveCategory(entity)
             }
         });
 
@@ -188,6 +204,8 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
                 }
             }
         });
+
+        setActiveColor(getComputedStyle(activeCategory).borderColor)
     }
 
     function getAllProjects() {
@@ -206,4 +224,8 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
         if (bc) element.style.setProperty('border-color', bc, 'important');
         if (c) element.style.setProperty('color', c, 'important');
     }
-}
+
+    function setActiveColor(color) {
+        document.documentElement.style.setProperty('--active-color', color);
+    }
+})();

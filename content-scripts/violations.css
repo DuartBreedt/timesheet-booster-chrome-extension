@@ -33,3 +33,15 @@
 .pickr {
     display: none !important;
 }
+
+.active-background {
+  background-color: var(--active-color) !important;
+}
+
+.active-border-color {
+  border-color: var(--active-color) !important;
+}
+
+.active-text {
+  color: var(--active-color) !important;
+}
