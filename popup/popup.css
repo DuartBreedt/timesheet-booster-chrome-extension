@@ -1,0 +1,63 @@
+body {
+    background-color: #22272E;
+    color: #FFFFFF;
+}
+
+label,
+p {
+    font-weight: bold;
+    color: rgb(173, 186, 199);
+}
+
+textarea {
+    padding: 6px 12px;
+    border-radius: 0px 0px 6px 6px;
+    background-color: #22272E;
+    color: rgb(118, 131, 144);
+    border-color: rgb(68, 76, 86);
+    border-top: 0px;
+    resize: none;
+}
+
+textarea:focus {
+    outline: none;
+}
+
+button {
+    color: #FFFFFF;
+    background-color: rgb(52, 125, 57);
+    border-radius: 6px;
+    border-color: rgba(205, 217, 229, 0.1);
+    border-width: 1px;
+    padding: 3px 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.accordion {
+    background-color: #2D333B;
+    color: rgb(173, 186, 199);
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 18px;
+    width: 100%;
+    text-align: left;
+    outline: none;
+    transition: 0.4s;
+    border-color: rgb(68, 76, 86);
+    border-style: solid;
+    border-width: 1px;
+}
+
+.active {
+    border-radius: 6px 6px 0px 0px;
+}
+
+.panel {
+    height: auto;
+    background-color: #22272E;
+    max-height: 0;
+    overflow: hidden;
+    margin-bottom: 10px;
+    transition: max-height 0.2s ease-out;
+}

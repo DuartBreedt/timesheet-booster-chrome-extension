@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <button class="accordion">Contains</button>
+    <div class="panel">
+        <textarea id="containsTextBox" rows="4" cols="50"></textarea>
+    </div>
+    <button class="accordion">Match whole words</button>
+    <div class="panel">
+        <textarea id="wordsTextBox" rows="4" cols="50"></textarea>
+    </div>
+
+    <p><span id="currentStep">0</span>/<span id="maxStep">0</span> occurrences</p>
+    <button id="prevButton">Prev</button>
+    <button id="nextButton">Next</button>
+    <script src="../constants.js"></script>
+    <script src="popup.js"></script>
+</body>
+
+</html>

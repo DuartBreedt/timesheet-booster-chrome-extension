@@ -1,0 +1,35 @@
+.timesheet-section div {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+@media (min-width: 1200px) {
+    .row-fluid .span2 {
+        width: 140px !important;
+        float: none !important;
+        margin-left: 0 !important;
+        position: relative !important;
+
+        .timesheetlistitem {
+            margin-right: 0px;
+        }
+    }
+}
+
+.color-picker {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 2;
+    height: 20px;
+    width: 20px;
+    padding: 0;
+    border: 1px solid #FFF;
+    border-radius: 4px 0px 0px 0px;
+    background-color: #FFF;
+}
+
+.pickr {
+    display: none !important;
+}
