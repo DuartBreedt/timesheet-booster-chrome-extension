@@ -7,12 +7,6 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
     const CATEGORIES_PARENT_SELECTOR = "[data-bind='foreach: visibleCategories']";
     const ITEM_SELECTOR = ".span2 .timesheetlistitem";
 
-    let activeProject;
-    let activeCategory;
-    let projects = [];
-    let categories = [];
-    let keywords = [];
-
     if (document.readyState === 'interactive' || document.readyState === 'complete') {
         init();
     } else {
@@ -22,8 +16,8 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
     }
 
     function init() {
-        chrome.storage.sync.get(STORAGE_KEY_KEYWORDS, (data) => {
-            keywords = data.keywords || [];
+        chrome.storage.sync.get(STORAGE_KEY_PROJECTS, (data) => {
+            data = data.projects || [];
             layoutProjects();
             layoutCategories();
             restyleProjectsAndCategories();
@@ -35,11 +29,11 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
         projects = Array.from(projectNodes);
         projects.forEach((entity) => {
             createFillButton(entity, (color) => {
-                const entry = {
+                const data = {
                     project: entity.innerText.trim(),
                     color: color.toHEXA().toString()
                 };
-                storeEntry(entry);
+                storeData(data);
                 styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF");
             });
 
@@ -60,14 +54,14 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
         categories = Array.from(categoryNodes);
         categories.forEach((entity) => {
             createFillButton(entity, (color) => {
-                const entry = {
+                const data = {
                     project: activeProject.innerText.trim(),
                     category: {
                         name: entity.innerText.trim(),
                         color: color.toHEXA().toString()
                     }
                 };
-                storeEntry(entry);
+                storeData(data);
                 styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF");
             });
 
@@ -130,43 +124,43 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
         });
     }
 
-    function storeEntry(entry) {
-        const existingProject = keywords.find((item) => item.project === entry.project);
+    function storeData(dataItem) {
+        const existingProject = data.find((item) => item.project === dataItem.project);
 
         if (existingProject) {
-            if (entry.category) {
+            if (dataItem.category) {
                 if (!existingProject.categories) {
                     existingProject.categories = [];
                 }
-                const existingCategory = existingProject.categories.find(c => c.name === entry.category.name);
+                const existingCategory = existingProject.categories.find(c => c.name === dataItem.category.name);
                 if (existingCategory) {
-                    existingCategory.color = entry.category.color;
+                    existingCategory.color = dataItem.category.color;
                 } else {
-                    existingProject.categories.push(entry.category);
+                    existingProject.categories.push(dataItem.category);
                 }
             } else {
-                existingProject.color = entry.color;
+                existingProject.color = dataItem.color;
             }
         } else {
-            keywords.push({
-                project: entry.project,
-                color: entry.color,
-                categories: entry.category ? [entry.category] : []
+            data.push({
+                project: dataItem.project,
+                color: dataItem.color,
+                categories: dataItem.category ? [dataItem.category] : []
             });
         }
 
         chrome.storage.sync.set({
-            [STORAGE_KEY_KEYWORDS]: keywords
+            [STORAGE_KEY_PROJECTS]: data
         });
     }
 
     function restyleProjectsAndCategories() {
-        if (!keywords) return;
+        if (!data) return;
 
         const projectMap = new Map(projects.map(p => [p.innerText.trim(), p]));
         const categoryMap = new Map(categories.map(c => [c.innerText.trim(), c]));
 
-        keywords.forEach((item) => {
+        data.forEach((item) => {
             const project = projectMap.get(item.project);
             if (project) {
                 const isProjectActive = project === activeProject;

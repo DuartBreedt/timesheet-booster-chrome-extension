@@ -1,10 +1,9 @@
-const refreshFiles = ["content-scripts/render.js"]
-
 const baseSetupFiles = [
     "constants.js",
     "content-scripts/setup.js",
     "content-scripts/jscolor.min.js",
-    ...refreshFiles,
+    "content-scripts/projects-and-categories-render.js",
+    "content-scripts/entry-render.js"
 ]
 
 let loaded = false
