@@ -1,78 +1,87 @@
-
 if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
     console.warn('Render script already loaded, skipping...');
 } else {
-    const PROJECT_PARENT_SELECTOR = "[data-bind='foreach: visibleProjects']"
-    const CATEGORIES_PARENT_SELECTOR = "[data-bind='foreach: visibleCategories']"
-    const ITEM_SELECTOR = ".span2 .timesheetlistitem"
+    window.__RENDER_SCRIPT_ALREADY_RUN__ = true;
 
-    let activeProject
-    let activeCategory
+    const PROJECT_PARENT_SELECTOR = "[data-bind='foreach: visibleProjects']";
+    const CATEGORIES_PARENT_SELECTOR = "[data-bind='foreach: visibleCategories']";
+    const ITEM_SELECTOR = ".span2 .timesheetlistitem";
 
-    window.addEventListener('load', () => {
+    let activeProject;
+    let activeCategory;
+    let projects = [];
+    let categories = [];
+    let keywords = [];
 
-        window.__RENDER_SCRIPT_ALREADY_RUN__ = true;
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        init();
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+        });
+    }
 
-        restyleProjectsAndCategories()
-
-        const projects = layoutProjects()
-        activeProject = Array.from(projects).filter(el => getComputedStyle(el).color === 'rgb(255, 255, 255)')[0];
-        const categories = layoutCategories()
-        activeCategory = Array.from(categories).filter(el => getComputedStyle(el).color === 'rgb(255, 255, 255)')[0];
-    })
+    function init() {
+        chrome.storage.sync.get(STORAGE_KEY_KEYWORDS, (data) => {
+            keywords = data.keywords || [];
+            layoutProjects();
+            layoutCategories();
+            restyleProjectsAndCategories();
+        });
+    }
 
     function layoutProjects() {
-        const projects = getAllProjects()
-        Array.from(projects).forEach((entity) => {
-            const button = createFillButton(entity, (color) => {
+        const projectNodes = getAllProjects();
+        projects = Array.from(projectNodes);
+        projects.forEach((entity) => {
+            createFillButton(entity, (color) => {
                 const entry = {
                     project: entity.innerText.trim(),
                     color: color.toHEXA().toString()
-                }
-
-                storeEntry(entry)
-
-                // Set background color of currently selected project and its unstyled categories.
-                //  TODO handle unstyled categories too...
-                styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF")
-            })
+                };
+                storeEntry(entry);
+                styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF");
+            });
 
             entity.addEventListener('click', () => {
                 activeProject = entity
-
-                const categories = layoutCategories()
-                activeCategory = Array.from(categories).filter(el => getComputedStyle(el).color === 'rgb(255, 255, 255)')[0];
-
+                layoutCategories()
                 restyleProjectsAndCategories()
             });
-        })
-        return projects
+            
+            if (entity.style.color == 'white') {
+                activeProject = entity
+            }
+        });
     }
 
     function layoutCategories() {
-        const categories = getAllCategories()
-        Array.from(categories).forEach((entity) => {
-            const button = createFillButton(entity, (color) => {
+        const categoryNodes = getAllCategories();
+        categories = Array.from(categoryNodes);
+        categories.forEach((entity) => {
+            createFillButton(entity, (color) => {
                 const entry = {
                     project: activeProject.innerText.trim(),
                     category: {
                         name: entity.innerText.trim(),
                         color: color.toHEXA().toString()
                     }
-                }
-
-                storeEntry(entry)
-
-                // Set background color of currently selected category
-                styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF")
-            })
+                };
+                storeEntry(entry);
+                styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF");
+            });
 
             entity.addEventListener('click', () => {
-                activeCategory = entity
-
-                restyleProjectsAndCategories()
+                activeCategory = entity;
+                // TODO: Restyle categories only
+                restyleProjectsAndCategories();
             });
-        })
+
+            if (entity.style.color == 'white') {
+                activeCategory = entity
+            }
+        });
+
         return categories
     }
 
@@ -85,11 +94,9 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
             theme: 'classic',
             inline: false,
             default: defaultColor,
-
             components: {
                 preview: true,
                 hue: true,
-
                 interaction: {
                     input: true,
                     save: true
@@ -99,8 +106,7 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
     }
 
     function createFillButton(entity, onSave) {
-        const def = getComputedStyle(entity).borderColor
-        const pickr = createPicker(def)
+        const pickr = createPicker(getComputedStyle(entity).borderColor);
 
         const elem = document.createElement('button');
         elem.className = 'color-picker';
@@ -111,87 +117,97 @@ if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
         img.style.height = '16px';
 
         elem.appendChild(img);
-
         entity.appendChild(elem);
 
-        elem.addEventListener('click', () => {
+        elem.addEventListener('click', (e) => {
+            e.stopPropagation();
             pickr.show();
         });
 
         pickr.on('save', (color) => {
-            onSave(color)
-            pickr.hide()
+            onSave(color);
+            pickr.hide();
         });
     }
 
     function storeEntry(entry) {
+        const existingProject = keywords.find((item) => item.project === entry.project);
 
-        chrome.storage.sync.get(STORAGE_KEY_KEYWORDS, async ({ keywords }) => {
-
-            let toStore = []
-            if (keywords && keywords.length > 0) {
-                toStore = [...keywords]
-            }
-
-            const existingProject = toStore.find((item) => item.project == entry.project)
-
-            if (existingProject) {
-                if (entry.category) {
-                    existingProject.categories = existingProject.categories.filter((item) => item.name != entry.category.name);
-                    existingProject.categories.push(entry.category)
+        if (existingProject) {
+            if (entry.category) {
+                if (!existingProject.categories) {
+                    existingProject.categories = [];
                 }
-                existingProject.color = entry.color ? entry.color : existingProject.color;
+                const existingCategory = existingProject.categories.find(c => c.name === entry.category.name);
+                if (existingCategory) {
+                    existingCategory.color = entry.category.color;
+                } else {
+                    existingProject.categories.push(entry.category);
+                }
             } else {
-                toStore.push({ project: entry.project, color: entry.color, categories: entry.category ? [entry.category] : [] })
+                existingProject.color = entry.color;
             }
+        } else {
+            keywords.push({
+                project: entry.project,
+                color: entry.color,
+                categories: entry.category ? [entry.category] : []
+            });
+        }
 
-            chrome.storage.sync.set({ [STORAGE_KEY_KEYWORDS]: toStore })
-        })
+        chrome.storage.sync.set({
+            [STORAGE_KEY_KEYWORDS]: keywords
+        });
     }
 
     function restyleProjectsAndCategories() {
-        chrome.storage.sync.get(STORAGE_KEY_KEYWORDS, async ({ keywords }) => {
-            if (keywords) {
-                const projects = getAllProjects()
-                const categories = getAllCategories()
+        if (!keywords) return;
 
-                keywords.forEach((item) => {
+        const projectMap = new Map(projects.map(p => [p.innerText.trim(), p]));
+        const categoryMap = new Map(categories.map(c => [c.innerText.trim(), c]));
 
-                    const project = projects.find((p) => p.innerText.trim() == item.project)
-                    if (project) {
-                        styleElement(project, project == activeProject ? item.color : '#FFFFFF', item.color, project == activeProject ? '#FFFFFF' : item.color)
+        keywords.forEach((item) => {
+            const project = projectMap.get(item.project);
+            if (project) {
+                const isProjectActive = project === activeProject;
+                styleElement(project, isProjectActive ? item.color : '#FFFFFF', item.color, isProjectActive ? '#FFFFFF' : item.color);
 
-                        if (project == activeProject) {
-
-                            // Set all project's categories to the project's color if it has one
-                            if (item.color) categories.forEach((cat) => styleElement(cat, '#FFFFFF', item.color, item.color))
-                            if (item.color) styleElement(activeCategory, item.color, item.color, '#FFFFFF')
-
-                            item.categories.forEach((cat) => {
-                                const category = categories.find((p) => p.innerText.trim() == cat.name)
-                                if (category) {
-                                    styleElement(category, category == activeCategory ? cat.color : '#FFFFFF', cat.color, category == activeCategory ? '#FFFFFF' : cat.color)
-                                }
-                            })
-                        }
+                if (isProjectActive) {
+                    // Style all categories with the project color first
+                    if (item.color) {
+                        categories.forEach((cat) => styleElement(cat, '#FFFFFF', item.color, item.color));
+                    }
+                    if (item.color && activeCategory) {
+                        styleElement(activeCategory, item.color, item.color, '#FFFFFF');
                     }
 
-                })
+
+                    if (item.categories) {
+                        item.categories.forEach((cat) => {
+                            const category = categoryMap.get(cat.name);
+                            if (category) {
+                                const isCategoryActive = category === activeCategory;
+                                styleElement(category, isCategoryActive ? cat.color : '#FFFFFF', cat.color, isCategoryActive ? '#FFFFFF' : cat.color);
+                            }
+                        });
+                    }
+                }
             }
-        })
+        });
     }
 
     function getAllProjects() {
-        const parent = document.querySelector(PROJECT_PARENT_SELECTOR)
-        return Array.from(parent.querySelectorAll(ITEM_SELECTOR))
+        const parent = document.querySelector(PROJECT_PARENT_SELECTOR);
+        return parent ? parent.querySelectorAll(ITEM_SELECTOR) : [];
     }
 
     function getAllCategories() {
-        const parent = document.querySelector(CATEGORIES_PARENT_SELECTOR)
-        return Array.from(parent.querySelectorAll(ITEM_SELECTOR))
+        const parent = document.querySelector(CATEGORIES_PARENT_SELECTOR);
+        return parent ? parent.querySelectorAll(ITEM_SELECTOR) : [];
     }
 
     function styleElement(element, bg, bc, c) {
+        if (!element) return;
         if (bg) element.style.setProperty('background-color', bg, 'important');
         if (bc) element.style.setProperty('border-color', bc, 'important');
         if (c) element.style.setProperty('color', c, 'important');
