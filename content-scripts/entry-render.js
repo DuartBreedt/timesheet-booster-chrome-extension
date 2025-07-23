@@ -51,7 +51,6 @@
     }
 
     function setupEventListeners() {
-        // const entireEntries = document.querySelectorAll(".timeEntry-entry");
         entireEntries.forEach(entry => {
             setupEntryListeners(entry)
 
@@ -87,10 +86,11 @@
     function styleCapturedEntries(entry) {
         entry.querySelectorAll('.timeEntry-capturedTime').forEach(capturedTime => {
             capturedTime.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-            const toolTipContainer = document.getElementsByClassName('timeEntry-tooltip')[0].firstElementChild.firstElementChild
-            const project = toolTipContainer.firstElementChild.querySelector('span').innerText
-            const category = toolTipContainer.children[1].querySelector('span').innerText
-            capturedTime.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+            const toolTipContainer = document.getElementsByClassName('timeEntry-tooltip')[0]
+            const tooltipContent = toolTipContainer.firstElementChild.firstElementChild
+            const project = tooltipContent.firstElementChild.querySelector('span').innerText
+            const category = tooltipContent.children[1].querySelector('span').innerText
+            toolTipContainer.remove()
             const bg = getColorFromData(project, category)
             if (bg) {
                 capturedTime.style.setProperty('background-color', bg, 'important');
