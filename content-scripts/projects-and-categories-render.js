@@ -6,10 +6,6 @@
     }
     window.__RENDER_SCRIPT_ALREADY_RUN__ = true;
 
-    const PROJECT_PARENT_SELECTOR = "[data-bind='foreach: visibleProjects']";
-    const CATEGORIES_PARENT_SELECTOR = "[data-bind='foreach: visibleCategories']";
-    const ITEM_SELECTOR = ".span2 .timesheetlistitem";
-
     // Run this function as soon as the data is loaded from local storage
     onDataLoaded.push(() => {
         layoutProjects();
@@ -17,20 +13,11 @@
         restyleProjectsAndCategories();
     })
 
-    if (document.readyState === 'interactive' || document.readyState === 'complete') {
-        init();
-    } else {
-        document.addEventListener('DOMContentLoaded', () => {
-            init();
-        });
-    }
-
-    function init() {
-        chrome.storage.sync.get(STORAGE_KEY_PROJECTS, (storeData) => {
-            data = storeData.projects || [];
-            onDataLoaded.forEach((fn) => fn())
-        });
-    }
+    onFillChanged.push((entity) => {
+        // styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF");
+        // TODO: If it's a project, restyle this project and its categories only. If it is a category, just restyle it
+        restyleProjectsAndCategories()
+    })
 
     function layoutProjects() {
         const projectNodes = getAllProjects();
@@ -42,7 +29,7 @@
                     color: color.toHEXA().toString()
                 };
                 storeData(data);
-                styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF");
+                onFillChanged.forEach((fn) => fn(entity))
             });
 
             entity.addEventListener('click', () => {
@@ -59,10 +46,12 @@
 
     function setActiveProject(project) {
         activeProject = project
+        onActiveProjectChanged.forEach((fn) => fn())
     }
 
     function setActiveCategory(category) {
         activeCategory = category
+        onActiveCategoryChanged.forEach((fn) => fn())
     }
 
     function layoutCategories() {
@@ -78,7 +67,7 @@
                     }
                 };
                 storeData(data);
-                styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF");
+                onFillChanged.forEach((fn) => fn(entity))
             });
 
             entity.addEventListener('click', () => {
@@ -191,7 +180,6 @@
                         styleElement(activeCategory, item.color, item.color, '#FFFFFF');
                     }
 
-
                     if (item.categories) {
                         item.categories.forEach((cat) => {
                             const category = categoryMap.get(cat.name);
@@ -205,17 +193,8 @@
             }
         });
 
+        console.log("Active color to ",getComputedStyle(activeCategory).borderColor )
         setActiveColor(getComputedStyle(activeCategory).borderColor)
-    }
-
-    function getAllProjects() {
-        const parent = document.querySelector(PROJECT_PARENT_SELECTOR);
-        return parent ? parent.querySelectorAll(ITEM_SELECTOR) : [];
-    }
-
-    function getAllCategories() {
-        const parent = document.querySelector(CATEGORIES_PARENT_SELECTOR);
-        return parent ? parent.querySelectorAll(ITEM_SELECTOR) : [];
     }
 
     function styleElement(element, bg, bc, c) {
@@ -223,9 +202,5 @@
         if (bg) element.style.setProperty('background-color', bg, 'important');
         if (bc) element.style.setProperty('border-color', bc, 'important');
         if (c) element.style.setProperty('color', c, 'important');
-    }
-
-    function setActiveColor(color) {
-        document.documentElement.style.setProperty('--active-color', color);
     }
 })();

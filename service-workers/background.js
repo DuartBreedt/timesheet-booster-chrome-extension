@@ -3,7 +3,9 @@ const baseSetupFiles = [
     "content-scripts/setup.js",
     "content-scripts/jscolor.min.js",
     "content-scripts/projects-and-categories-render.js",
-    "content-scripts/entry-render.js"
+    "content-scripts/entry-render.js",
+    "content-scripts/category-pinning-render.js",
+    "content-scripts/main.js"
 ]
 
 let loaded = false

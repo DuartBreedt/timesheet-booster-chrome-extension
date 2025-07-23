@@ -10,11 +10,15 @@
 
     let entireEntries
 
-    if (document.readyState === 'interactive' || document.readyState === 'complete') {
-        init();
-    } else {
-        document.addEventListener('DOMContentLoaded', init, { once: true });
-    }
+    onDataLoaded.push(() => {
+        entireEntries = document.querySelectorAll(".timeEntry-entry");
+        entireEntries.forEach((entry) => styleCapturedEntries(entry))
+        setupEventListeners()
+    })
+
+    onFillChanged.push((entity) => {
+        entireEntries.forEach((entry) => styleCapturedEntries(entry))
+    })
 
     function handleTimeEntryMouseEnter(event) {
         if (!activeCategory) return;
@@ -74,13 +78,6 @@
         entry.querySelectorAll(TIME_ENTRY_SELECTOR).forEach(entry => {
             entry.addEventListener('mouseenter', handleTimeEntryMouseEnter);
         });
-    }
-
-    function init() {
-        entireEntries = document.querySelectorAll(".timeEntry-entry");
-        // Run this function as soon as the data is loaded from local storage
-        onDataLoaded.push(() => entireEntries.forEach((entry) => styleCapturedEntries(entry)))
-        setupEventListeners()
     }
 
     function styleCapturedEntries(entry) {

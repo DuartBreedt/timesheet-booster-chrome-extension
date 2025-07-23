@@ -30,6 +30,19 @@
     background-color: #FFF;
 }
 
+.pin {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    height: 20px;
+    width: 20px;
+    padding: 0;
+    border: 1px solid #FFF;
+    border-radius: 0px 0px 0px 4px;
+    background-color: #FFF;
+}
+
 .pickr {
     display: none !important;
 }
