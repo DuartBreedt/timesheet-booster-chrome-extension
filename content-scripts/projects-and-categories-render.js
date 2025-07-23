@@ -129,36 +129,6 @@
         });
     }
 
-    function storeData(dataItem) {
-        const existingProject = data.find((item) => item.project === dataItem.project);
-
-        if (existingProject) {
-            if (dataItem.category) {
-                if (!existingProject.categories) {
-                    existingProject.categories = [];
-                }
-                const existingCategory = existingProject.categories.find(c => c.name === dataItem.category.name);
-                if (existingCategory) {
-                    existingCategory.color = dataItem.category.color;
-                } else {
-                    existingProject.categories.push(dataItem.category);
-                }
-            } else {
-                existingProject.color = dataItem.color;
-            }
-        } else {
-            data.push({
-                project: dataItem.project,
-                color: dataItem.color,
-                categories: dataItem.category ? [dataItem.category] : []
-            });
-        }
-
-        chrome.storage.sync.set({
-            [STORAGE_KEY_PROJECTS]: data
-        });
-    }
-
     function restyleProjectsAndCategories() {
         if (!data) return;
 
@@ -193,7 +163,6 @@
             }
         });
 
-        console.log("Active color to ",getComputedStyle(activeCategory).borderColor )
         setActiveColor(getComputedStyle(activeCategory).borderColor)
     }
 

@@ -14,13 +14,25 @@
         const categoryNodes = getAllCategories();
         categories = Array.from(categoryNodes);
         categories.forEach((entity, index) => {
-            entity.parentElement.parentElement.style.setProperty('order', index + 2, 'important');
+            const categoryData = getStoredCategoryData(activeProject.innerText.trim(), entity.innerText.trim())
+            const isPinned = categoryData && categoryData.isPinned
+            const orderData = isPinned ? 1 : index + 2;
+
+            entity.parentElement.parentElement.style.setProperty('order', orderData, 'important');
             createPinButton(entity, () => {
-                if (entity.parentElement.parentElement.style.order != 1) {
-                    entity.parentElement.parentElement.style.setProperty('order', 1, 'important');
-                } else {
-                    entity.parentElement.parentElement.style.setProperty('order', index + 2, 'important');
+                const isPinned = entity.parentElement.parentElement.style.order != 1
+                const order = isPinned ? 1 : index + 2;
+                entity.parentElement.parentElement.style.setProperty('order', order, 'important');
+
+                // Update data
+                const data = {
+                    project: activeProject.innerText.trim(),
+                    category: {
+                        name: entity.innerText.trim(),
+                        isPinned: isPinned
+                    }
                 }
+                storeData(data);
             });
         })
     }
