@@ -1,9 +1,6 @@
 # Timesheet Booster
 
-## TODO
-- Add category pinning functionality
-- Improve Bucket fill UI
-- Add dark mode toggle
-- Add shortcuts or extra buttons (like bulk capture)
-- Add focus mode (nyan cat/dancing cat)
-- Add space invaders
+## Getting started
+1. Download this repository
+2. In Google Chrome visit [chrome://extensions/](chrome://extensions/)
+3. Select Load unpacked and select the project root directory
