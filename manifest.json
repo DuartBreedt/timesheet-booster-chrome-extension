@@ -22,15 +22,6 @@
     "background": {
         "service_worker": "service-workers/background.js"
     },
-    "action": {
-        "default_popup": "popup/popup.html",
-        "default_icon": {
-            "16": "/images/ic_icon.png",
-            "32": "/images/ic_icon.png",
-            "48": "/images/ic_icon.png",
-            "128": "/images/ic_icon.png"
-        }
-    },
     "content_scripts": [
         {
             "matches": [
