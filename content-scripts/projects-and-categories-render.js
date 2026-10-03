@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    if (window.__ENTRY_RENDER_SCRIPT_ALREADY_RUN__) {
+    if (window.__RENDER_SCRIPT_ALREADY_RUN__) {
         return;
     }
     window.__RENDER_SCRIPT_ALREADY_RUN__ = true;
@@ -58,6 +58,14 @@
         const categoryNodes = getAllCategories();
         categories = Array.from(categoryNodes);
         categories.forEach((entity) => {
+            if (entity.style.color == 'white') {
+                setActiveCategory(entity)
+            }
+
+            // Re-selecting the same project makes knockout reuse the category nodes
+            if (entity.dataset.tbBound) return;
+            entity.dataset.tbBound = 'true';
+
             createFillButton(entity, (color) => {
                 const data = {
                     project: activeProject.innerText.trim(),
@@ -68,6 +76,20 @@
                 };
                 storeData(data);
                 onFillChanged.forEach((fn) => fn(entity))
+            }, {
+                canReset: () => {
+                    const categoryData = getStoredCategoryData(activeProject.innerText.trim(), entity.innerText.trim())
+                    return !!(categoryData && categoryData.color)
+                },
+                onReset: () => {
+                    clearCategoryColor(activeProject.innerText.trim(), entity.innerText.trim())
+
+                    // Go back to the project's color, whether that is a stored one or the timesheet's own
+                    const projectColor = getComputedStyle(activeProject).borderColor
+                    const isActive = entity === activeCategory
+                    styleElement(entity, isActive ? projectColor : '#FFFFFF', projectColor, isActive ? '#FFFFFF' : projectColor)
+                    onFillChanged.forEach((fn) => fn(entity))
+                }
             });
 
             entity.addEventListener('click', () => {
@@ -75,16 +97,12 @@
                 // TODO: Restyle categories only
                 restyleProjectsAndCategories();
             });
-
-            if (entity.style.color == 'white') {
-                setActiveCategory(entity)
-            }
         });
 
         return categories
     }
 
-    function createPicker(defaultColor) {
+    function createPicker(defaultColor, withReset) {
         const pickrContainer = document.createElement('div');
         document.body.appendChild(pickrContainer);
 
@@ -93,22 +111,32 @@
             theme: 'classic',
             inline: false,
             default: defaultColor,
+            i18n: {
+                'btn:clear': 'Reset',
+                'aria:btn:clear': 'Reset to project color'
+            },
             components: {
                 preview: true,
                 hue: true,
                 interaction: {
                     input: true,
+                    clear: withReset,
                     save: true
                 }
             }
         });
     }
 
-    function createFillButton(entity, onSave) {
-        const pickr = createPicker(getComputedStyle(entity).borderColor);
+    // reset (optional): { canReset: () => boolean, onReset: () => void } adds a "Reset" button to the picker
+    function createFillButton(entity, onSave, reset) {
+        const pickr = createPicker(getComputedStyle(entity).borderColor, !!reset);
 
         const elem = document.createElement('button');
+        elem.type = 'button';
         elem.className = 'color-picker';
+        elem.title = 'Change color';
+        elem.setAttribute('aria-label', 'Change color');
+        elem.setAttribute('aria-expanded', 'false');
 
         const img = document.createElement('img');
         img.src = chrome.runtime.getURL("icons/paint-bucket.svg");
@@ -120,10 +148,32 @@
 
         elem.addEventListener('click', (e) => {
             e.stopPropagation();
+            // Open on the color the item currently has rather than the one it had at page load
+            pickr.setColor(getComputedStyle(entity).borderColor, true);
             pickr.show();
         });
 
+        pickr.on('show', () => {
+            if (reset) {
+                // Only offer a reset when there is a custom color to remove
+                pickr.getRoot().interaction.clear.style.display = reset.canReset() ? '' : 'none';
+            }
+            elem.classList.add('is-open');
+            elem.setAttribute('aria-expanded', 'true');
+        });
+
+        pickr.on('hide', () => {
+            elem.classList.remove('is-open');
+            elem.setAttribute('aria-expanded', 'false');
+        });
+
         pickr.on('save', (color) => {
+            // Pickr's clear button saves a null color
+            if (!color) {
+                if (reset) reset.onReset();
+                pickr.hide();
+                return;
+            }
             onSave(color);
             pickr.hide();
         });
@@ -153,7 +203,8 @@
                     if (item.categories) {
                         item.categories.forEach((cat) => {
                             const category = categoryMap.get(cat.name);
-                            if (category) {
+                            // Categories that were only pinned have no color of their own
+                            if (category && cat.color) {
                                 const isCategoryActive = category === activeCategory;
                                 styleElement(category, isCategoryActive ? cat.color : '#FFFFFF', cat.color, isCategoryActive ? '#FFFFFF' : cat.color);
                             }
@@ -163,7 +214,14 @@
             }
         });
 
-        setActiveColor(getComputedStyle(activeCategory).borderColor)
+        // Lets the pin/fill buttons pick up their item's color for hover, focus and selected states
+        [...projects, ...categories].forEach((entity) => {
+            entity.style.setProperty('--tb-color', getComputedStyle(entity).borderColor);
+        });
+
+        if (activeCategory) {
+            setActiveColor(getComputedStyle(activeCategory).borderColor)
+        }
     }
 
     function styleElement(element, bg, bc, c) {

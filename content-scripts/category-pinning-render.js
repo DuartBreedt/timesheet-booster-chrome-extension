@@ -19,10 +19,19 @@
             const orderData = isPinned ? 1 : index + 2;
 
             entity.parentElement.parentElement.style.setProperty('order', orderData, 'important');
-            createPinButton(entity, () => {
+
+            // Re-selecting the same project makes knockout reuse the category nodes, which already have a pin
+            const existingPin = entity.querySelector(':scope > .pin')
+            if (existingPin) {
+                setPinnedState(existingPin, isPinned)
+                return
+            }
+
+            const pin = createPinButton(entity, () => {
                 const isPinned = entity.parentElement.parentElement.style.order != 1
                 const order = isPinned ? 1 : index + 2;
                 entity.parentElement.parentElement.style.setProperty('order', order, 'important');
+                setPinnedState(pin, isPinned)
 
                 // Update data
                 const data = {
@@ -34,11 +43,21 @@
                 }
                 storeData(data);
             });
+            setPinnedState(pin, isPinned)
         })
+    }
+
+    function setPinnedState(pin, isPinned) {
+        pin.classList.toggle('is-pinned', !!isPinned);
+        pin.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
+        pin.title = isPinned ? 'Unpin category' : 'Pin category';
+        pin.setAttribute('aria-label', pin.title);
+        pin.firstElementChild.src = chrome.runtime.getURL(isPinned ? "icons/pin-fill.svg" : "icons/pin.svg");
     }
 
     function createPinButton(entity, onPin) {
         const elem = document.createElement('button');
+        elem.type = 'button';
         elem.className = 'pin';
 
         const img = document.createElement('img');
@@ -53,6 +72,8 @@
             e.stopPropagation();
             onPin()
         });
+
+        return elem
     }
 
 })();

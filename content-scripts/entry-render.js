@@ -7,29 +7,32 @@
     window.__ENTRY_RENDER_SCRIPT_ALREADY_RUN__ = true;
 
     const TIME_ENTRY_SELECTOR = ".timeEntry-quaterhour";
-
-    let entireEntries
+    const ENTIRE_ENTRY_SELECTOR = ".timeEntry-entry";
+    // Tagged with data-tb-project/data-tb-category by entry-metadata-bridge.js
+    const CAPTURED_TIME_SELECTOR = ".timeEntry-capturedTime[data-tb-category]";
 
     onDataLoaded.push(() => {
-        entireEntries = document.querySelectorAll(".timeEntry-entry");
-        entireEntries.forEach((entry) => styleCapturedEntries(entry))
+        styleAllCapturedEntries()
         setupEventListeners()
     })
 
     onFillChanged.push((entity) => {
-        entireEntries.forEach((entry) => styleCapturedEntries(entry))
+        styleAllCapturedEntries()
     })
 
-    function handleTimeEntryMouseEnter(event) {
+    function handleTimeEntryMouseOver(event) {
         if (!activeCategory) return;
 
-        const entireEntry = event.currentTarget.parentElement
+        const timeEntry = event.target.closest(TIME_ENTRY_SELECTOR)
+        if (!timeEntry) return;
+
+        const entireEntry = timeEntry.parentElement
 
         // If an entry is being captured don't handle mouseover
         if (entireEntry.parentElement.querySelector('.timeEntry-container')) return;
 
         const timeEntries = entireEntry.querySelectorAll(TIME_ENTRY_SELECTOR);
-        const currentItemNumber = parseInt(event.currentTarget.getAttribute('item-number'), 10);
+        const currentItemNumber = parseInt(timeEntry.getAttribute('item-number'), 10);
 
         timeEntries.forEach(entry => {
             const itemNumber = parseInt(entry.getAttribute('item-number'), 10);
@@ -41,6 +44,13 @@
         });
     }
 
+    function handleEntryMouseOut(event) {
+        const entireEntry = event.target.closest(ENTIRE_ENTRY_SELECTOR)
+        // Only act when the pointer actually leaves the entry, i.e. mouseleave semantics
+        if (!entireEntry || entireEntry.contains(event.relatedTarget)) return;
+        restoreAllOriginalColors(entireEntry)
+    }
+
     function restoreAllOriginalColors(entireEntry) {
         // If an entry is being captured don't restore colors on mouseleave
         if (!entireEntry.parentElement.querySelector('.timeEntry-container')) {
@@ -50,49 +60,52 @@
         }
     }
 
-    function onEntryClicked(entry) {
-        entry.parentElement.querySelector(".timeEntry-container .timeEntry-banner").classList.add('active-background')
+    function handleEntryClicked(event) {
+        const entireEntry = event.target.closest(ENTIRE_ENTRY_SELECTOR)
+        if (!entireEntry) return;
+        const banner = entireEntry.parentElement.querySelector(".timeEntry-container .timeEntry-banner")
+        if (banner) banner.classList.add('active-background')
     }
 
     function setupEventListeners() {
-        entireEntries.forEach(entry => {
-            setupEntryListeners(entry)
+        // Delegated so entries rendered later (week navigation, added/removed entries) are covered too
+        document.addEventListener('mouseover', handleTimeEntryMouseOver);
+        document.addEventListener('mouseout', handleEntryMouseOut);
+        document.addEventListener('click', handleEntryClicked);
 
-            const observer = new MutationObserver((mutations, obs) => {
-                setupEntryListeners(entry)
-                styleCapturedEntries(entry)
-            });
+        // The bridge tags captured times after the timesheet (re)renders them
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => styleCapturedEntry(mutation.target))
+        });
 
-            observer.observe(entry, {
-                childList: true,
-                subtree: true
-            });
-        })
-    }
-
-    function setupEntryListeners(entry) {
-
-        entry.addEventListener('mouseleave', () => restoreAllOriginalColors(entry));
-        entry.addEventListener('click', () => onEntryClicked(entry));
-
-        entry.querySelectorAll(TIME_ENTRY_SELECTOR).forEach(entry => {
-            entry.addEventListener('mouseenter', handleTimeEntryMouseEnter);
+        observer.observe(document.body, {
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['data-tb-category']
         });
     }
 
-    function styleCapturedEntries(entry) {
-        entry.querySelectorAll('.timeEntry-capturedTime').forEach(capturedTime => {
-            capturedTime.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-            const toolTipContainer = document.getElementsByClassName('timeEntry-tooltip')[0]
-            const tooltipContent = toolTipContainer.firstElementChild.firstElementChild
-            const project = tooltipContent.firstElementChild.querySelector('span').innerText
-            const category = tooltipContent.children[1].querySelector('span').innerText
-            toolTipContainer.remove()
-            const bg = getColorFromData(project, category)
-            if (bg) {
-                capturedTime.style.setProperty('background-color', bg, 'important');
-            }
-        })
+    function styleAllCapturedEntries() {
+        document.querySelectorAll(CAPTURED_TIME_SELECTOR).forEach(styleCapturedEntry)
+    }
+
+    function styleCapturedEntry(capturedTime) {
+        const project = capturedTime.dataset.tbProject
+        const category = capturedTime.dataset.tbCategory
+        if (project === undefined || category === undefined) return;
+
+        // Remember the timesheet's own color so it can be restored once no custom color applies
+        if (capturedTime.dataset.tbOriginalColor === undefined) {
+            capturedTime.dataset.tbOriginalColor = capturedTime.style.backgroundColor
+        }
+
+        const bg = getColorFromData(project, category)
+        if (bg) {
+            capturedTime.style.setProperty('background-color', bg, 'important');
+        } else {
+            capturedTime.style.removeProperty('background-color');
+            capturedTime.style.backgroundColor = capturedTime.dataset.tbOriginalColor;
+        }
     }
 
 })();

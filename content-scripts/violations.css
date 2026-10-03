@@ -17,30 +17,86 @@
     }
 }
 
-.color-picker {
+/* --tb-color is set per item by projects-and-categories-render.js */
+.color-picker,
+.pin {
     position: absolute;
-    bottom: 0;
     right: 0;
     z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     height: 20px;
     width: 20px;
     padding: 0;
     border: 1px solid #FFF;
-    border-radius: 4px 0px 0px 0px;
     background-color: #FFF;
+    cursor: pointer;
+    transition: background-color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+}
+
+.color-picker {
+    bottom: 0;
+    border-radius: 4px 0px 0px 0px;
 }
 
 .pin {
-    position: absolute;
     top: 0;
-    right: 0;
-    z-index: 2;
-    height: 20px;
-    width: 20px;
-    padding: 0;
-    border: 1px solid #FFF;
     border-radius: 0px 0px 0px 4px;
-    background-color: #FFF;
+}
+
+.color-picker img,
+.pin img {
+    opacity: 0.55;
+    transition: opacity 120ms ease, transform 120ms ease;
+}
+
+/* Unpinned pins lean over; pinned ones stand upright */
+.pin img {
+    transform: rotate(45deg);
+}
+
+.color-picker:hover,
+.pin:hover {
+    background-color: color-mix(in srgb, var(--tb-color, #888) 20%, #FFF);
+}
+
+.color-picker:hover img,
+.pin:hover img {
+    opacity: 1;
+}
+
+.color-picker:focus-visible,
+.pin:focus-visible {
+    z-index: 3;
+    outline: none;
+    box-shadow: 0 0 0 2px #FFF, 0 0 0 4px var(--tb-color, #333);
+}
+
+.color-picker:focus-visible img,
+.pin:focus-visible img {
+    opacity: 1;
+}
+
+.color-picker:active,
+.pin:active {
+    transform: scale(0.9);
+}
+
+/* Selected: color picker open / category pinned */
+.color-picker.is-open,
+.pin.is-pinned {
+    background-color: var(--tb-color, #333);
+}
+
+.color-picker.is-open img,
+.pin.is-pinned img {
+    opacity: 1;
+    filter: brightness(0) invert(1);
+}
+
+.pin.is-pinned img {
+    transform: none;
 }
 
 .pickr {

@@ -12,7 +12,8 @@ function getColorFromData(project, category) {
     const projectData = data.find((dataItem) => dataItem.project == project)
     if (!projectData) return undefined
     const categoryData = projectData.categories.find((c) => c.name == category)
-    if (categoryData) return categoryData.color
+    // A category can be stored without a color (e.g. it was only pinned), so fall back to the project color
+    if (categoryData && categoryData.color) return categoryData.color
     return projectData.color
 }
 
@@ -46,6 +47,23 @@ function syncData() {
     chrome.storage.sync.set({
         [STORAGE_KEY_PROJECTS]: data
     });
+}
+
+function clearCategoryColor(project, category) {
+    const projectData = getStoredProjectData(project)
+    if (!projectData || !projectData.categories) return
+
+    const index = projectData.categories.findIndex((item) => item.name == category)
+    if (index === -1) return
+
+    const categoryData = projectData.categories[index]
+    delete categoryData.color
+    // Nothing else worth keeping for this category, so remove it entirely
+    if (!categoryData.isPinned) {
+        projectData.categories.splice(index, 1)
+    }
+
+    syncData()
 }
 
 function storeData(dataItem) {

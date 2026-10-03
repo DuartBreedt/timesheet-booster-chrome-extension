@@ -8,6 +8,11 @@ const baseSetupFiles = [
     "content-scripts/main.js"
 ]
 
+// Needs the page's own jQuery/tooltipster, so it runs in the MAIN world instead of the isolated one
+const mainWorldSetupFiles = [
+    "content-scripts/entry-metadata-bridge.js"
+]
+
 let loaded = false
 if (!chrome.tabs.onUpdated.hasListeners() && !loaded) {
     loaded = true
@@ -26,16 +31,17 @@ async function onMessageCallback(request, sender, sendResponse) {
     }
 }
 
-async function onHistoryStateUpdatedCallback(details) {
-    setupPage(details)
+async function onHistoryStateUpdatedCallback(tabId) {
+    setupPage(tabId)
 }
 
-async function setupPage(details) {
-    refreshPage(baseSetupFiles, details.tabId)
+async function setupPage(tabId) {
+    refreshPage(baseSetupFiles, tabId)
+    refreshPage(mainWorldSetupFiles, tabId, 'MAIN')
 }
 
 // Refresh UI with markup
-async function refreshPage(files, tabId = undefined) {
+async function refreshPage(files, tabId = undefined, world = 'ISOLATED') {
     if (!tabId) {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
 
@@ -47,7 +53,8 @@ async function refreshPage(files, tabId = undefined) {
     if (tabId) {
         chrome.scripting.executeScript({
             target: { tabId },
-            files
+            files,
+            world
         })
     }
 }
