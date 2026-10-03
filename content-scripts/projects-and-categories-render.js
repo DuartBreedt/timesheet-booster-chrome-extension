@@ -11,11 +11,10 @@
         layoutProjects();
         layoutCategories();
         restyleProjectsAndCategories();
+        observeSelection();
     })
 
     onFillChanged.push((entity) => {
-        // styleElement(entity, color.toHEXA().toString(), color.toHEXA().toString(), "#FFFFFF");
-        // TODO: If it's a project, restyle this project and its categories only. If it is a category, just restyle it
         restyleProjectsAndCategories()
     })
 
@@ -31,17 +30,10 @@
                 storeData(data);
                 onFillChanged.forEach((fn) => fn(entity))
             });
-
-            entity.addEventListener('click', () => {
-                setActiveProject(entity)
-                layoutCategories()
-                restyleProjectsAndCategories()
-            });
-
-            if (entity.style.color == 'white') {
-                setActiveProject(entity)
-            }
         });
+
+        const selected = getSelectedItem(PROJECT_PARENT_SELECTOR)
+        if (selected) setActiveProject(selected)
     }
 
     function setActiveProject(project) {
@@ -58,10 +50,6 @@
         const categoryNodes = getAllCategories();
         categories = Array.from(categoryNodes);
         categories.forEach((entity) => {
-            if (entity.style.color == 'white') {
-                setActiveCategory(entity)
-            }
-
             // Re-selecting the same project makes knockout reuse the category nodes
             if (entity.dataset.tbBound) return;
             entity.dataset.tbBound = 'true';
@@ -83,23 +71,49 @@
                 },
                 onReset: () => {
                     clearCategoryColor(activeProject.innerText.trim(), entity.innerText.trim())
-
-                    // Go back to the project's color, whether that is a stored one or the timesheet's own
-                    const projectColor = getComputedStyle(activeProject).borderColor
-                    const isActive = entity === activeCategory
-                    styleElement(entity, isActive ? projectColor : '#FFFFFF', projectColor, isActive ? '#FFFFFF' : projectColor)
                     onFillChanged.forEach((fn) => fn(entity))
                 }
             });
-
-            entity.addEventListener('click', () => {
-                setActiveCategory(entity)
-                // TODO: Restyle categories only
-                restyleProjectsAndCategories();
-            });
         });
 
+        const selected = getSelectedItem(CATEGORIES_PARENT_SELECTOR)
+        if (selected) setActiveCategory(selected)
+
         return categories
+    }
+
+    // Following knockout's selection covers choices made from the "Other" dropdowns and the header
+    // selects too, not only clicks on the items themselves
+    function getSelectedItem(parentSelector) {
+        const parent = document.querySelector(parentSelector)
+        if (!parent) return undefined
+        return Array.from(parent.querySelectorAll(LIST_ITEM_SELECTOR)).find(isSelectedListItem)
+    }
+
+    function observeSelection() {
+        const parents = [PROJECT_PARENT_SELECTOR, CATEGORIES_PARENT_SELECTOR]
+            .map((selector) => document.querySelector(selector))
+            .filter(Boolean)
+
+        const observer = new MutationObserver((mutations) => {
+            // Ignore our own style writes on wrappers (e.g. pin ordering)
+            const relevant = mutations.some((m) => m.type === 'childList' || m.target.classList.contains('timesheetlistitem'))
+            if (!relevant) return;
+
+            const selectedProject = getSelectedItem(PROJECT_PARENT_SELECTOR)
+            if (selectedProject && selectedProject !== activeProject) {
+                setActiveProject(selectedProject)
+            }
+            layoutCategories()
+            restyleProjectsAndCategories()
+        });
+
+        parents.forEach((parent) => observer.observe(parent, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style']
+        }));
     }
 
     function createPicker(defaultColor, withReset) {
@@ -127,9 +141,13 @@
         });
     }
 
+    function getItemColor(entity) {
+        return entity.style.getPropertyValue('--tb-color') || entity.style.borderColor
+    }
+
     // reset (optional): { canReset: () => boolean, onReset: () => void } adds a "Reset" button to the picker
     function createFillButton(entity, onSave, reset) {
-        const pickr = createPicker(getComputedStyle(entity).borderColor, !!reset);
+        const pickr = createPicker(getItemColor(entity) || '#8A8E93', !!reset);
 
         const elem = document.createElement('button');
         elem.type = 'button';
@@ -149,7 +167,7 @@
         elem.addEventListener('click', (e) => {
             e.stopPropagation();
             // Open on the color the item currently has rather than the one it had at page load
-            pickr.setColor(getComputedStyle(entity).borderColor, true);
+            pickr.setColor(getItemColor(entity), true);
             pickr.show();
         });
 
@@ -179,55 +197,37 @@
         });
     }
 
+    // Colors are exposed as --tb-color and the selection as .tb-active; redesign.css decides how they look.
+    // Knockout's own inline styles stay untouched and still hold the timesheet's default colors.
     function restyleProjectsAndCategories() {
         if (!data) return;
 
-        const projectMap = new Map(projects.map(p => [p.innerText.trim(), p]));
-        const categoryMap = new Map(categories.map(c => [c.innerText.trim(), c]));
-
-        data.forEach((item) => {
-            const project = projectMap.get(item.project);
-            if (project) {
-                const isProjectActive = project === activeProject;
-                styleElement(project, isProjectActive ? item.color : '#FFFFFF', item.color, isProjectActive ? '#FFFFFF' : item.color);
-
-                if (isProjectActive) {
-                    // Style all categories with the project color first
-                    if (item.color) {
-                        categories.forEach((cat) => styleElement(cat, '#FFFFFF', item.color, item.color));
-                    }
-                    if (item.color && activeCategory) {
-                        styleElement(activeCategory, item.color, item.color, '#FFFFFF');
-                    }
-
-                    if (item.categories) {
-                        item.categories.forEach((cat) => {
-                            const category = categoryMap.get(cat.name);
-                            // Categories that were only pinned have no color of their own
-                            if (category && cat.color) {
-                                const isCategoryActive = category === activeCategory;
-                                styleElement(category, isCategoryActive ? cat.color : '#FFFFFF', cat.color, isCategoryActive ? '#FFFFFF' : cat.color);
-                            }
-                        });
-                    }
-                }
-            }
+        projects.forEach((project) => {
+            const stored = getStoredProjectData(project.innerText.trim())
+            setItemColor(project, (stored && stored.color) || project.style.borderColor)
         });
 
-        // Lets the pin/fill buttons pick up their item's color for hover, focus and selected states
-        [...projects, ...categories].forEach((entity) => {
-            entity.style.setProperty('--tb-color', getComputedStyle(entity).borderColor);
+        const activeProjectName = activeProject ? activeProject.innerText.trim() : undefined
+        const storedProject = activeProjectName && getStoredProjectData(activeProjectName)
+        categories.forEach((category) => {
+            const stored = activeProjectName && getStoredCategoryData(activeProjectName, category.innerText.trim())
+            // Knockout gives categories the project's default color as their border
+            const color = (stored && stored.color) || (storedProject && storedProject.color) || category.style.borderColor
+            setItemColor(category, color)
         });
+
+        document.querySelectorAll(`${PROJECT_PARENT_SELECTOR} ${LIST_ITEM_SELECTOR}, ${CATEGORIES_PARENT_SELECTOR} ${LIST_ITEM_SELECTOR}`)
+            .forEach((item) => item.classList.toggle('tb-active', isSelectedListItem(item)));
 
         if (activeCategory) {
-            setActiveColor(getComputedStyle(activeCategory).borderColor)
+            setActiveColor(getItemColor(activeCategory))
         }
     }
 
-    function styleElement(element, bg, bc, c) {
-        if (!element) return;
-        if (bg) element.style.setProperty('background-color', bg, 'important');
-        if (bc) element.style.setProperty('border-color', bc, 'important');
-        if (c) element.style.setProperty('color', c, 'important');
+    function setItemColor(element, color) {
+        // Only write on change: these writes are observed by observeSelection
+        if (color && element.style.getPropertyValue('--tb-color') !== color) {
+            element.style.setProperty('--tb-color', color);
+        }
     }
 })();

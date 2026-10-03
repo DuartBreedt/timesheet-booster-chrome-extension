@@ -1,16 +1,20 @@
 const baseSetupFiles = [
     "constants.js",
     "content-scripts/setup.js",
+    "content-scripts/icons.js",
     "content-scripts/jscolor.min.js",
     "content-scripts/projects-and-categories-render.js",
     "content-scripts/entry-render.js",
     "content-scripts/category-pinning-render.js",
+    "content-scripts/redesign-render.js",
+    "content-scripts/quick-actions-render.js",
     "content-scripts/main.js"
 ]
 
-// Needs the page's own jQuery/tooltipster, so it runs in the MAIN world instead of the isolated one
+// Need the page's own jQuery, tooltipster and timesheet widgets, so they run in the MAIN world instead of the isolated one
 const mainWorldSetupFiles = [
-    "content-scripts/entry-metadata-bridge.js"
+    "content-scripts/entry-metadata-bridge.js",
+    "content-scripts/day-actions-bridge.js"
 ]
 
 let loaded = false

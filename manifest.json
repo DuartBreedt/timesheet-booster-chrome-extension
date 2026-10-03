@@ -29,7 +29,8 @@
             ],
             "css": [
                 "content-scripts/violations.css",
-                "content-scripts/classic.min.css"
+                "content-scripts/classic.min.css",
+                "content-scripts/redesign.css"
             ],
             "js": []
         }

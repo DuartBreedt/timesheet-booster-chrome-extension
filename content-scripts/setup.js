@@ -21,6 +21,11 @@ function setActiveColor(color) {
     document.documentElement.style.setProperty('--active-color', color);
 }
 
+// Knockout styles the selected project/category with `color: white`
+function isSelectedListItem(item) {
+    return item.style.color == 'white' || item.style.color == 'rgb(255, 255, 255)'
+}
+
 function getAllProjects() {
     const parent = document.querySelector(PROJECT_PARENT_SELECTOR);
     return parent ? parent.querySelectorAll(ITEM_SELECTOR) : [];
