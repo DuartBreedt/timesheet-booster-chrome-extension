@@ -27,6 +27,7 @@
     --tb-blue: #2b6fd8;
     --tb-blue-dark: #1f5bb8;
     --tb-purple: #6a46c2;
+    --tb-teal: #0f766e;
     --tb-green: #2f8a3a;
     --tb-green-soft: #dcefd8;
     --tb-danger: #c62828;
@@ -592,7 +593,8 @@ html .tb-has-quick:not([data-tb-view="form"]) > .timeEntry-content,
 html .tb-has-quick:not([data-tb-view="form"]) > .tb-or,
 html .tb-has-quick:not([data-tb-view="form"]) > .tb-templates,
 html .tb-has-quick:not([data-tb-view="bulk"]) > .tb-bulk,
-html .tb-has-quick:not([data-tb-view="move"]) > .tb-move {
+html .tb-has-quick:not([data-tb-view="move"]) > .tb-move,
+html .tb-has-quick:not([data-tb-view="copy"]) > .tb-copy {
     display: none;
 }
 
@@ -653,6 +655,10 @@ html .tb-action {
     transition: filter 120ms ease, box-shadow 120ms ease, transform 80ms ease;
 }
 
+html .tb-action[hidden] {
+    display: none;
+}
+
 html .tb-action--bulk {
     background: var(--tb-blue);
 }
@@ -667,6 +673,15 @@ html .tb-action:active {
 
 html .tb-action:focus-visible {
     outline: none;
+}
+
+html .tb-action--copy {
+    background: var(--tb-teal);
+}
+
+html .tb-action--copy[aria-pressed="true"],
+html .tb-action--copy:focus-visible {
+    box-shadow: 0 0 0 3px var(--tb-surface), 0 0 0 5px var(--tb-teal);
 }
 
 html .tb-action--move {
@@ -944,6 +959,30 @@ html .tb-button--danger {
 
 html .tb-button--danger:hover {
     background: color-mix(in srgb, var(--tb-danger-fill) 88%, #000);
+}
+
+/* Copy to Other Days */
+html .tb-day-pills .tb-choice[aria-pressed="true"] {
+    color: var(--tb-on-accent);
+    background: var(--tb-teal);
+    border-color: var(--tb-teal);
+}
+
+html .tb-copy-shortcuts {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+html .tb-copy-extra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+html .tb-copy-extra .tb-button {
+    min-width: 0;
 }
 
 html .tb-move-summary {
@@ -1569,6 +1608,7 @@ html.tb-dark {
     --tb-blue-dark: #2160c4;
     --tb-blue-text: #5d8fe1;
     --tb-purple: #7459c9;
+    --tb-teal: #2b6f68;
     --tb-green: #3c7948;
     --tb-green-text: #4fa060;
     --tb-green-soft: #1f3a2a;

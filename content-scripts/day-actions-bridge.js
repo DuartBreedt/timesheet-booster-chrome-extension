@@ -200,12 +200,50 @@
     // There is no reliable "change date" request, so a move is: create a copy on the target day, then delete
     // the original. The original is only deleted once the copy exists, so a failure leaves a duplicate
     // rather than losing the entry.
+    // The entry in the open form: the saved record when editing, or one built from the form's current
+    // values (like timeEntryContent's getNewTimesheetEntry) when it hasn't been saved yet
+    function getEditedEntry(widget) {
+        const entryContent = widget && widget.entryContent;
+        if (!entryContent) return { error: 'Open an entry first.' };
+
+        const entryId = entryContent.options.entryId;
+        if (entryId) {
+            const saved = widget.options.timesheetEntries.find((e) => e.EntryId === entryId);
+            return saved ? { entryContent: entryContent, entry: saved } : { error: 'Could not find the entry being edited.' };
+        }
+
+        const vm = entryContent.viewModel;
+        const time = /^\s*(\d{1,2})h(\d{1,2})\s*$/i.exec(vm.time() || '');
+        const duration = time ? Number(time[1]) + Number(time[2]) / 60 : 0;
+        if (!duration) return { error: 'Enter the time as 0h00 first.' };
+        const locationId = Number(vm.workedFromLocationId());
+        if (!locationId) return { error: 'Select where you worked from first.' };
+
+        return {
+            entryContent: entryContent,
+            isNew: true,
+            entry: {
+                CategoryId: vm.categoryId(),
+                ProjectId: vm.projectId(),
+                ProjectName: entryContent.options.projectName,
+                CategoryName: entryContent.options.categoryName,
+                DurationInHours: duration,
+                TicketReference: vm.ticketNumber(),
+                Description: vm.description(),
+                SentimentId: vm.sentimentId(),
+                Billable: vm.billable(),
+                WorkedFromHome: locationId === LOCATION_HOME,
+                WorkedFromLocationDefault: locationId,
+                WorkedFromLocationId: locationId,
+                IsLeave: entryContent.options.isLeave
+            }
+        };
+    }
+
     async function moveEntry(command) {
         const widget = getDayWidget(command.date);
-        const entryContent = widget && widget.entryContent;
-        const entryId = entryContent && entryContent.options.entryId;
-        const entry = entryId && widget.options.timesheetEntries.find((e) => e.EntryId === entryId);
-        if (!entry) return { ok: false, message: 'Could not find the entry being edited.' };
+        const { entryContent, entry, isNew, error } = getEditedEntry(widget);
+        if (error) return { ok: false, message: error };
         if (!command.targetDate || command.targetDate === command.date) {
             return { ok: false, message: 'Pick a different day to move the entry to.' };
         }
@@ -214,6 +252,14 @@
         if (!created.success) {
             if (created.RedirectUrl) window.open(created.RedirectUrl);
             return { ok: false, message: `Could not create the entry on ${command.targetLabel}: ${errorText(created)}` };
+        }
+
+        // Not saved here yet: saving it on the target day is the whole move
+        if (isNew) {
+            entryContent.options.onCancel();
+            const newTarget = getDayWidget(command.targetDate);
+            if (newTarget) newTarget._addTimesheetEntry(Object.assign({}, entry, { EntryId: created.entryId, Locations: LOCATIONS }));
+            return { ok: true, message: `Saved "${entry.CategoryName}" on ${command.targetLabel} instead.` };
         }
 
         const removed = await post(widget.options.deleteUrl, { timesheetEntryId: entry.EntryId });
@@ -324,7 +370,48 @@
         return { ok: !failures.length, message: message };
     }
 
-    const handlers = { bulkEdit: bulkEdit, applyTemplate: applyTemplate, moveEntry: moveEntry, moveDay: moveDay, deleteDay: deleteDay };
+    // Creates an identical copy of the entry being edited on each chosen day; the original is untouched
+    async function copyEntry(command) {
+        const widget = getDayWidget(command.date);
+        const { entry, error } = getEditedEntry(widget);
+        if (error) return { ok: false, message: error };
+
+        const targets = (command.targets || []).filter((t) => t.date && t.date !== command.date);
+        if (!targets.length) return { ok: false, message: 'Pick at least one other day.' };
+
+        const copied = [];
+        const failures = [];
+        for (const t of targets) {
+            const created = await post(widget.options.submitUrl, toRequest(widget, entry, 0, t.date));
+            if (!created.success) {
+                failures.push(`${t.label} (${errorText(created)})`);
+                continue;
+            }
+            copied.push(t.label);
+            // Days in view show the copy straight away
+            const target = getDayWidget(t.date);
+            if (target) target._addTimesheetEntry(Object.assign({}, entry, { EntryId: created.entryId }));
+        }
+
+        let message = copied.length
+            ? `Copied "${entry.CategoryName}" to ${countDays(copied.length)}: ${copied.join(', ')}.`
+            : 'Nothing was copied.';
+        if (failures.length) message += ` Failed: ${failures.join('; ')}.`;
+        return { ok: !failures.length, message: message };
+    }
+
+    function countDays(count) {
+        return `${count} ${count === 1 ? 'day' : 'days'}`;
+    }
+
+    const handlers = {
+        bulkEdit: bulkEdit,
+        applyTemplate: applyTemplate,
+        moveEntry: moveEntry,
+        copyEntry: copyEntry,
+        moveDay: moveDay,
+        deleteDay: deleteDay
+    };
 
     document.addEventListener('tb:command', async (event) => {
         let command;

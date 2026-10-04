@@ -24,6 +24,7 @@
     const VIEW_FORM = 'form';
     const VIEW_BULK = 'bulk';
     const VIEW_MOVE = 'move';
+    const VIEW_COPY = 'copy';
 
     let templates = [];
     // home until changed in settings
@@ -175,10 +176,8 @@
             el('div', { class: 'tb-quick-total', html: tbIcon('clock') }, [total]),
             el('div', { class: 'tb-quick-heading', html: `${tbIcon('bolt')}<span>Quick Actions</span>` }),
             buildActionButton(VIEW_BULK, 'tb-action--bulk', 'pencil', 'Bulk Edit Day', 'Office, sentiment, move or delete', toggleView),
-            // only saved entries can be moved
-            container.dataset.tbMode === 'edit'
-                ? buildActionButton(VIEW_MOVE, 'tb-action--move', 'move', 'Move Entry', 'Captured on the wrong day?', toggleView)
-                : null
+            buildActionButton(VIEW_MOVE, 'tb-action--move', 'move', 'Move Entry', 'Captured on the wrong day?', toggleView),
+            buildActionButton(VIEW_COPY, 'tb-action--copy', 'duplicate', 'Copy to Other Days', 'Same entry on more days', toggleView)
         ])
 
         const templatesCard = el('div', { class: 'tb-card tb-templates' })
@@ -191,8 +190,8 @@
             el('div', { class: 'tb-or', 'aria-hidden': 'true' }, [el('span', { text: 'OR' })]),
             templatesCard,
             buildBulkCard(day, showForm, refreshTotal),
-            // append() would turn a null into the text "null"
-            ...(container.dataset.tbMode === 'edit' ? [buildMoveCard(day, container, showForm)] : [])
+            buildMoveCard(day, container, showForm),
+            buildCopyCard(day, container, showForm)
         )
         container.classList.add('tb-has-quick')
         container.dataset.tbView = VIEW_FORM
@@ -203,6 +202,22 @@
             applyDefaultLocation(container)
         }
         if (content) groupFormButtons(content)
+        if (container.dataset.tbMode === 'new') revealEntryActionsOnDescription(container, quick, showForm)
+    }
+
+    // An unsaved entry can only be moved or copied once there is something to move: wait for a description
+    function revealEntryActionsOnDescription(container, quick, showForm) {
+        const description = container.querySelector('.timeEntry-content textarea')
+        const actions = quick.querySelectorAll('.tb-action--move, .tb-action--copy')
+        if (!description) return;
+
+        const sync = () => {
+            const hasDescription = description.value.trim().length > 0
+            actions.forEach((action) => { action.hidden = !hasDescription })
+            if (!hasDescription && [VIEW_MOVE, VIEW_COPY].includes(container.dataset.tbView)) showForm()
+        }
+        description.addEventListener('input', sync)
+        sync()
     }
 
     // moving the elements keeps their knockout click bindings
@@ -246,11 +261,24 @@
 
         if (view === VIEW_BULK) container.querySelector('.tb-bulk').tbPrefill()
         if (view === VIEW_MOVE) container.querySelector('.tb-move').tbPrefill()
+        if (view === VIEW_COPY) container.querySelector('.tb-copy').tbPrefill()
 
         const focusTarget = view === VIEW_FORM
             ? container.querySelector('.timeEntry-content textarea')
             : container.querySelector(`.tb-${view} button`)
         if (focusTarget) focusTarget.focus({ preventScroll: true })
+    }
+
+    // A finished quick action closes its panel and returns to the entry form (if the form is still open,
+    // moving or deleting closes it), so the outcome is shown as a toast. Failures stay in the panel.
+    function showResult(result, status, close) {
+        if (result.ok) {
+            toast(result.message)
+            close()
+            return;
+        }
+        status.className = 'tb-status tb-status--error'
+        status.textContent = result.message
     }
 
     function getDayLabel(day) {
@@ -321,12 +349,9 @@
             status.className = 'tb-status'
             status.textContent = busyText
             const result = await sendCommand(Object.assign({ date: day.dataset.tbDate }, command))
-            // Moving or deleting closes the entry form, taking this panel with it
-            if (closesForm) toast(result.message, !result.ok)
-            status.className = `tb-status ${result.ok ? 'tb-status--ok' : 'tb-status--error'}`
-            status.textContent = result.message
             refreshTotal()
             updateButtons()
+            showResult(result, status, close)
         }
 
         const locations = buildChoiceGroup('tb-locations', 'Worked from', LOCATIONS, () => updateButtons())
@@ -415,6 +440,142 @@
         return card
     }
 
+    function isWeekday(dateKey) {
+        const [year, month, date] = dateKey.split('-').map(Number)
+        const weekday = new Date(year, month - 1, date).getDay()
+        return weekday !== 0 && weekday !== 6
+    }
+
+    // Copies the saved entry to any number of other days: the days in view as toggle pills, plus any date
+    function buildCopyCard(day, container, close) {
+        const status = el('p', { class: 'tb-status', role: 'status' })
+        const summary = el('div', { class: 'tb-move-summary' })
+        const pills = el('div', { class: 'tb-choices tb-day-pills', role: 'group', 'aria-label': 'Days to copy to' })
+        const selected = new Set()
+
+        const syncSelection = () => {
+            pills.querySelectorAll('.tb-choice').forEach((pill) => {
+                pill.setAttribute('aria-pressed', String(selected.has(pill.dataset.date)))
+            })
+            copyButton.disabled = selected.size === 0
+            copyButton.querySelector('span').textContent = selected.size
+                ? `Copy to ${selected.size} ${selected.size === 1 ? 'day' : 'days'}`
+                : 'Copy'
+        }
+
+        const addPill = (dateKey, label) => {
+            if (dateKey === day.dataset.tbDate || pills.querySelector(`[data-date="${dateKey}"]`)) return;
+            pills.append(el('button', {
+                type: 'button',
+                class: 'tb-choice',
+                'data-date': dateKey,
+                'aria-pressed': 'false',
+                text: label,
+                onclick: () => {
+                    selected.has(dateKey) ? selected.delete(dateKey) : selected.add(dateKey)
+                    syncSelection()
+                }
+            }))
+        }
+
+        const extraDate = el('input', {
+            type: 'date',
+            class: 'tb-date-input',
+            id: `tb-copy-date-${day.dataset.tbDate}`,
+            'aria-label': 'Another date'
+        })
+        const addDateButton = el('button', {
+            type: 'button',
+            class: 'tb-button',
+            text: 'Add date',
+            onclick: () => {
+                const dateKey = extraDate.value
+                if (!dateKey || dateKey === day.dataset.tbDate) return;
+                addPill(dateKey, formatDayLabel(dateKey))
+                selected.add(dateKey)
+                syncSelection()
+                extraDate.value = ''
+            }
+        })
+
+        const copyButton = el('button', {
+            type: 'button',
+            class: 'tb-button tb-button--primary',
+            disabled: true,
+            html: `${tbIcon('duplicate')}<span>Copy</span>`,
+            onclick: async () => {
+                copyButton.disabled = true
+                status.className = 'tb-status'
+                status.textContent = 'Copying entry…'
+                const targets = Array.from(selected).sort().map((dateKey) => ({
+                    date: dateKey,
+                    label: pills.querySelector(`[data-date="${dateKey}"]`).textContent
+                }))
+                const result = await sendCommand({ type: 'copyEntry', date: day.dataset.tbDate, targets })
+                if (result.ok) selected.clear()
+                syncSelection()
+                showResult(result, status, close)
+            }
+        })
+
+        const card = el('div', { class: 'tb-card tb-copy' }, [
+            el('h3', { class: 'tb-card-title', html: `${tbIcon('duplicate')}<span>Copy to Other Days</span>` }),
+            el('p', {
+                class: 'tb-card-subtitle',
+                text: container.dataset.tbMode === 'new'
+                    ? 'Create this entry on other days using what is filled in on the form. Click Save afterwards to keep it on this day too.'
+                    : 'Create the same entry on other days. This entry stays where it is. Unsaved changes in the form are not copied.'
+            }),
+            summary,
+            el('div', { class: 'tb-field-label', text: 'Days' }),
+            pills,
+            el('div', { class: 'tb-copy-shortcuts' }, [
+                el('button', {
+                    type: 'button',
+                    class: 'tb-small-button',
+                    text: 'Weekdays',
+                    onclick: () => {
+                        pills.querySelectorAll('.tb-choice').forEach((pill) => {
+                            if (isWeekday(pill.dataset.date)) selected.add(pill.dataset.date)
+                        })
+                        syncSelection()
+                    }
+                }),
+                el('button', {
+                    type: 'button',
+                    class: 'tb-small-button',
+                    text: 'Clear',
+                    onclick: () => { selected.clear(); syncSelection() }
+                })
+            ]),
+            el('label', { class: 'tb-field-label', for: extraDate.id, text: 'Another date' }),
+            el('div', { class: 'tb-copy-extra' }, [extraDate, addDateButton]),
+            el('div', { class: 'tb-card-buttons' }, [
+                copyButton,
+                el('button', { type: 'button', class: 'tb-button', text: 'Cancel', onclick: close })
+            ]),
+            status
+        ])
+
+        card.tbPrefill = () => {
+            status.textContent = ''
+            const banner = container.querySelector('.timeEntry-banner')
+            const time = container.querySelector('.timeEntry-content-time input')
+            summary.replaceChildren(
+                el('strong', { text: banner ? banner.textContent.trim() : '' }),
+                el('span', { text: `${getDayLabel(day)}${time && time.value ? ` • ${time.value}` : ''}` })
+            )
+            selected.clear()
+            pills.replaceChildren()
+            document.querySelectorAll('.timeEntry[data-tb-date]').forEach((other) => {
+                addPill(other.dataset.tbDate, getDayLabel(other))
+            })
+            syncSelection()
+        }
+
+        return card
+    }
+
     function formatDayLabel(dateKey) {
         const [year, month, date] = dateKey.split('-').map(Number)
         return new Date(year, month - 1, date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })
@@ -442,17 +603,19 @@
                 status.textContent = 'Moving entry…'
                 const targetLabel = formatDayLabel(dateInput.value)
                 const result = await sendCommand({ type: 'moveEntry', date: day.dataset.tbDate, targetDate: dateInput.value, targetLabel })
-                // On success the edit form closes and takes this card with it
-                toast(result.message, !result.ok)
-                status.className = `tb-status ${result.ok ? 'tb-status--ok' : 'tb-status--error'}`
-                status.textContent = result.message
                 update()
+                showResult(result, status, close)
             }
         })
 
         const card = el('div', { class: 'tb-card tb-move' }, [
             el('h3', { class: 'tb-card-title', html: `${tbIcon('move')}<span>Move Entry</span>` }),
-            el('p', { class: 'tb-card-subtitle', text: 'Move this entry to the day it should have been captured on. Unsaved changes in the form are not moved.' }),
+            el('p', {
+                class: 'tb-card-subtitle',
+                text: container.dataset.tbMode === 'new'
+                    ? 'Save this entry on another day instead of this one, using what is filled in on the form.'
+                    : 'Move this entry to the day it should have been captured on. Unsaved changes in the form are not moved.'
+            }),
             summary,
             el('label', { class: 'tb-field-label', for: dateInput.id, text: 'Move to' }),
             dateInput,
