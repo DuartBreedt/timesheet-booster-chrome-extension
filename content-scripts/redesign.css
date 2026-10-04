@@ -2300,24 +2300,27 @@ html.tb-dark .tb-celebration--birthday .tb-capture-label {
     border-color: transparent;
 }
 
-/* Christmas season: a week either side of the 25th, see isFestiveSeason in theme.js */
+/* Seasonal looks, switched on by TB_SEASONS in theme.js. Backdrops sit behind the cards so they never cover
+   text; the page wrapper is see-through so they show between them */
 
 :root {
     --tb-snow: rgba(110, 150, 205, 0.4);
-    --tb-festive-red: #b8323a;
+    --tb-bat: rgba(59, 36, 82, 0.18);
 }
 
 html.tb-dark {
     --tb-snow: rgba(255, 255, 255, 0.5);
+    --tb-bat: rgba(205, 180, 255, 0.2);
 }
 
-/* falls behind the cards so it never sits over text; the page wrapper is see-through so it shows between them */
-html.tb-festive .container-fluid {
+html.tb-festive .container-fluid,
+html.tb-halloween .container-fluid {
     background: transparent !important;
 }
 
 html.tb-festive body::before,
-html.tb-festive body::after {
+html.tb-festive body::after,
+html.tb-halloween body::before {
     content: "";
     position: fixed;
     left: 0;
@@ -2379,11 +2382,30 @@ html.tb-festive body::after {
     }
 }
 
-html.tb-festive .tb-title {
+html.tb-halloween body::before {
+    top: 0;
+    height: calc(100vh + 640px);
+    background-color: var(--tb-bat);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640' viewBox='0 0 640 640'%3E%3Cdefs%3E%3Cpath id='b' d='M32 22L29.5 16.5Q27.5 19 25.5 20Q24.5 15.5 21.5 13.5Q19 16.5 16.5 15.5Q15.5 11 12.5 9.5Q10 12 7.5 11Q6 7 2 4.5C10 2.5 20 5.5 28 10L29 5L31 8.5H33L35 5L36 10C44 5.5 54 2.5 62 4.5Q58 7 56.5 11Q54 12 51.5 9.5Q48.5 11 47.5 15.5Q45 16.5 42.5 13.5Q39.5 15.5 38.5 20Q36.5 19 34.5 16.5Z'/%3E%3C/defs%3E%3Cuse href='%23b' transform='translate(30 50) rotate(-10) scale(1.0 1.4)'/%3E%3Cuse href='%23b' transform='translate(330 20) rotate(8) scale(0.75 1.05)'/%3E%3Cuse href='%23b' transform='translate(170 150) rotate(-4) scale(1.15 1.61)'/%3E%3Cuse href='%23b' transform='translate(450 230) rotate(12) scale(0.85 1.19)'/%3E%3Cuse href='%23b' transform='translate(60 300) rotate(6) scale(0.8 1.12)'/%3E%3Cuse href='%23b' transform='translate(270 350) rotate(-8) scale(1.05 1.47)'/%3E%3Cuse href='%23b' transform='translate(500 470) rotate(-6) scale(0.7 0.98)'/%3E%3Cuse href='%23b' transform='translate(130 500) rotate(10) scale(0.9 1.26)'/%3E%3Cuse href='%23b' transform='translate(390 560) rotate(4) scale(0.8 1.12)'/%3E%3C/svg%3E") 0 0 / 640px 640px repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640' viewBox='0 0 640 640'%3E%3Cdefs%3E%3Cpath id='b' d='M32 22L29.5 16.5Q27.5 19 25.5 20Q24.5 15.5 21.5 13.5Q19 16.5 16.5 15.5Q15.5 11 12.5 9.5Q10 12 7.5 11Q6 7 2 4.5C10 2.5 20 5.5 28 10L29 5L31 8.5H33L35 5L36 10C44 5.5 54 2.5 62 4.5Q58 7 56.5 11Q54 12 51.5 9.5Q48.5 11 47.5 15.5Q45 16.5 42.5 13.5Q39.5 15.5 38.5 20Q36.5 19 34.5 16.5Z'/%3E%3C/defs%3E%3Cuse href='%23b' transform='translate(30 50) rotate(-10) scale(1.0 1.4)'/%3E%3Cuse href='%23b' transform='translate(330 20) rotate(8) scale(0.75 1.05)'/%3E%3Cuse href='%23b' transform='translate(170 150) rotate(-4) scale(1.15 1.61)'/%3E%3Cuse href='%23b' transform='translate(450 230) rotate(12) scale(0.85 1.19)'/%3E%3Cuse href='%23b' transform='translate(60 300) rotate(6) scale(0.8 1.12)'/%3E%3Cuse href='%23b' transform='translate(270 350) rotate(-8) scale(1.05 1.47)'/%3E%3Cuse href='%23b' transform='translate(500 470) rotate(-6) scale(0.7 0.98)'/%3E%3Cuse href='%23b' transform='translate(130 500) rotate(10) scale(0.9 1.26)'/%3E%3Cuse href='%23b' transform='translate(390 560) rotate(4) scale(0.8 1.12)'/%3E%3C/svg%3E") 0 0 / 640px 640px repeat;
+    animation: tb-bats-rise 70s linear infinite, tb-snow-sway 9s ease-in-out infinite alternate;
+}
+
+/* rises exactly one tile, so the loop is seamless */
+@keyframes tb-bats-rise {
+    to {
+        transform: translateY(-640px);
+    }
+}
+
+html.tb-festive .tb-title,
+html.tb-halloween .tb-title {
     position: relative;
 }
 
-html.tb-festive .tb-title::before {
+/* a hat on the header's clock icon */
+html.tb-festive .tb-title::before,
+html.tb-halloween .tb-title::before {
     content: "";
     position: absolute;
     top: -15px;
@@ -2395,16 +2417,8 @@ html.tb-festive .tb-title::before {
     pointer-events: none;
 }
 
-html.tb-festive .tb-title::after {
-    content: "Happy holidays";
-    padding: 3px 11px 3px 26px;
-    font: 700 11.5px/16px var(--tb-font);
-    letter-spacing: 0.03em;
-    text-transform: none;
-    color: #ffffff;
-    background: var(--tb-festive-red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10'/%3E%3Cpath d='M9 4l3 2.5L15 4M9 20l3-2.5 3 2.5M4.2 10.6l3.7-.8-1.2-3.6M19.8 13.4l-3.7.8 1.2 3.6M4.2 13.4l3.7.8-1.2 3.6M19.8 10.6l-3.7-.8 1.2-3.6'/%3E%3C/svg%3E") 9px center / 12px no-repeat;
-    border-radius: 999px;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 2px 6px color-mix(in srgb, var(--tb-festive-red) 30%, transparent);
+html.tb-halloween .tb-title::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 28'%3E%3Cg stroke='%23a58bd0' stroke-width='0.9' stroke-linejoin='round'%3E%3Cpath d='M9 20.5c2-6 4.5-13 7.5-17 1.6-1.8 4.2-1.1 5.2 1-2.1-.2-3.2 1-3.7 3.2L23.5 20.5z' fill='%234a2d68'/%3E%3Cellipse cx='16.2' cy='21.6' rx='14.2' ry='3.3' fill='%234a2d68'/%3E%3C/g%3E%3Cpath d='M9.7 17.2h13.5l.6 3H9.1z' fill='%23e07b24'/%3E%3C/svg%3E");
 }
 
 /* Locks the page while a quick action runs; the visuals fade in late so quick actions don't flash */
@@ -2744,7 +2758,8 @@ html.tb-dark .tb-celebration--day .tb-capture-label {
 
     /* still flakes would just look like specks */
     html.tb-festive body::before,
-    html.tb-festive body::after {
+    html.tb-festive body::after,
+    html.tb-halloween body::before {
         display: none;
     }
 

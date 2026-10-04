@@ -13,8 +13,11 @@
     const BIRTHDAY_CONFETTI_COUNT = 44;
     // muted warm and cool accents from the palette, so the confetti sits with the rest of the page
     const CONFETTI_COLORS = ['#eca65e', '#7cb677', '#7e95c8', '#c57791', '#cab072', '#72adb9'];
-    // red, green and gold while theme.js has the christmas season on
-    const FESTIVE_CONFETTI_COLORS = ['#c94a4a', '#2f8a57', '#d9a93f', '#e07a6a', '#7cb677', '#b8323a'];
+    // seasonal palettes while theme.js has a holiday season on
+    const SEASON_CONFETTI_COLORS = {
+        'tb-festive': ['#c94a4a', '#2f8a57', '#d9a93f', '#e07a6a', '#7cb677', '#b8323a'],
+        'tb-halloween': ['#e07b24', '#7b4bb3', '#8fb339', '#f0a64a', '#5e3a87', '#c8611d']
+    };
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     document.addEventListener('tb:entry-captured', onEntryCaptured)
@@ -105,7 +108,8 @@
             layer.append(ray)
         }
 
-        const colors = document.documentElement.classList.contains('tb-festive') ? FESTIVE_CONFETTI_COLORS : CONFETTI_COLORS
+        const season = Object.keys(SEASON_CONFETTI_COLORS).find((name) => document.documentElement.classList.contains(name))
+        const colors = season ? SEASON_CONFETTI_COLORS[season] : CONFETTI_COLORS
         const count = { entry: CONFETTI_COUNT, day: FULL_DAY_CONFETTI_COUNT, birthday: BIRTHDAY_CONFETTI_COUNT }[variant]
         const spread = { entry: 46, day: 90, birthday: 160 }[variant]
         // a birthday bursts all the way round, the rest fan upwards

@@ -17,12 +17,21 @@ chrome.storage.onChanged.addListener((changes, area) => {
     })
 })
 
-// a week either side of christmas by the computer's date, not the week being viewed
-function isFestiveSeason(now) {
+// by the computer's date rather than the week being viewed
+const TB_SEASONS = [
+    { className: 'tb-halloween', month: 9, day: 31, daysBefore: 7, daysAfter: 0 },
+    { className: 'tb-festive', month: 11, day: 25, daysBefore: 7, daysAfter: 7 }
+]
+
+// checks last, this and next year's date so the week around new year counts
+function isInSeason(now, { month, day, daysBefore, daysAfter }) {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const christmasYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
-    const daysFromChristmas = Math.round((today - new Date(christmasYear, 11, 25)) / 86400000)
-    return Math.abs(daysFromChristmas) <= 7
+    return [-1, 0, 1].some((offset) => {
+        const daysFromHoliday = Math.round((today - new Date(now.getFullYear() + offset, month, day)) / 86400000)
+        return daysFromHoliday >= -daysBefore && daysFromHoliday <= daysAfter
+    })
 }
 
-document.documentElement.classList.toggle('tb-festive', isFestiveSeason(new Date()))
+TB_SEASONS.forEach((season) => {
+    document.documentElement.classList.toggle(season.className, isInSeason(new Date(), season))
+})
