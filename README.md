@@ -14,8 +14,6 @@ Everything runs on top of the existing timesheet. Your entries are still saved b
 
 The timesheet gets a fresh layout: a clear title, project and category chips with initials, a tidy calendar, and day timelines with quarter-hour ticks that make gaps easy to spot. The entry form is restyled as a card, with simple outline sentiment faces and "Worked From" pills.
 
-![Redesigned entry form](docs/screenshots/entry-form.png)
-
 ### Dark mode
 
 Switch the timesheet to dark mode from the header. Your choice is remembered, applied before the page loads (no white flash) and kept in step across all your open timesheet tabs.
@@ -36,19 +34,17 @@ Pin the categories you use most and they stay at the front of the list, so you n
 
 ### Quick Actions
 
-Open any day and a **Quick Actions** panel appears next to the entry form:
+Open any day and the entry form is flanked by a **Quick Actions** panel on the left and your **Templates** on the right:
 
 - **Bulk Edit Day:** set the office or sentiment for every entry on a day, move all of a day's entries to another date, or clear the day completely. Signed-off entries are never changed.
 - **Move Entry:** captured something on the wrong day? Send it to the right one in one click.
 - **Copy to Other Days:** create the same entry on several days at once, with a "Weekdays" shortcut for things like daily standups.
 
-![Quick Actions and Bulk Edit Day](docs/screenshots/quick-actions.png)
+![Quick Actions, entry form and Templates](docs/screenshots/entry-form.png)
 
 ### Templates for recurring entries
 
-Tick **Save as template** when you add an entry, then reuse it on any day straight from the Templates card next to the entry form. Your standup, client sync or team meeting is a single click every week. Rename or delete templates from **Manage Templates** in the header.
-
-![Templates](docs/screenshots/templates.png)
+Tick **Save as template** when you add an entry, then reuse it on any day straight from the Templates card shown above. Your standup, client sync or team meeting is a single click every week. Rename or delete templates from **Manage Templates** in the header.
 
 ### Default office
 
