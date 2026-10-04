@@ -24,10 +24,14 @@
     const VIEW_BULK = 'bulk';
 
     let templates = [];
+    // Office pre-selected in new entries (Home until changed in Settings)
+    const DEFAULT_LOCATION_ID = 2;
+    let defaultLocationId = DEFAULT_LOCATION_ID;
     const pendingCommands = new Map();
 
     onDataLoaded.push(() => {
         loadTemplates()
+        loadSettings()
         renderHeaderActions()
         observeForms()
 
@@ -196,7 +200,14 @@
         if (container.dataset.tbMode === 'new') {
             const content = container.querySelector('.timeEntry-content')
             if (content) content.append(buildSaveTemplateRow())
+            applyDefaultLocation(container)
         }
+    }
+
+    // Selects the configured office the way a user would, so the form's own bindings pick it up
+    function applyDefaultLocation(container) {
+        const radio = container.querySelector(`input[type="radio"][value="${defaultLocationId}"]`)
+        if (radio && !radio.checked) radio.click()
     }
 
     function buildActionButton(view, className, icon, title, subtitle, onSelect) {
@@ -436,9 +447,16 @@
                 class: 'tb-header-button',
                 'aria-haspopup': 'dialog',
                 html: `${tbIcon('template')}<span>Manage Templates</span>`,
-                onclick: openManageDialog
+                onclick: () => openDialog('manage', 'Manage templates', renderManageCard)
             }),
-            buildThemeToggle()
+            buildThemeToggle(),
+            el('button', {
+                type: 'button',
+                class: 'tb-settings-button',
+                'aria-haspopup': 'dialog',
+                html: `${tbIcon('settings')}<span>Settings</span>`,
+                onclick: () => openDialog('settings', 'Settings', renderSettingsCard)
+            })
         ]))
     }
 
@@ -468,18 +486,59 @@
         return toggle
     }
 
-    function openManageDialog() {
-        let dialog = document.querySelector('.tb-dialog')
+    // Modal dialog holding a single card (.tb-<name>), created on first use
+    function openDialog(name, label, render) {
+        let dialog = document.querySelector(`.tb-dialog[data-tb-dialog="${name}"]`)
         if (!dialog) {
-            const card = el('div', { class: 'tb-card tb-manage' })
-            dialog = el('dialog', { class: 'tb-dialog', 'aria-label': 'Manage templates' }, [card])
+            const card = el('div', { class: `tb-card tb-${name}` })
+            dialog = el('dialog', { class: 'tb-dialog', 'data-tb-dialog': name, 'aria-label': label }, [card])
             card.tbClose = () => dialog.close()
             // Clicking the backdrop closes it
             dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close() })
             document.body.append(dialog)
         }
-        renderManageCard(dialog.querySelector('.tb-manage'))
+        render(dialog.firstElementChild)
         dialog.showModal()
+    }
+
+    // ---------- Settings ----------
+
+    function loadSettings() {
+        chrome.storage.sync.get(STORAGE_KEY_DEFAULT_LOCATION, (stored) => {
+            defaultLocationId = Number(stored[STORAGE_KEY_DEFAULT_LOCATION]) || DEFAULT_LOCATION_ID
+        })
+        chrome.storage.onChanged.addListener((changes, area) => {
+            if (area === 'sync' && changes[STORAGE_KEY_DEFAULT_LOCATION]) {
+                defaultLocationId = Number(changes[STORAGE_KEY_DEFAULT_LOCATION].newValue) || DEFAULT_LOCATION_ID
+            }
+        })
+    }
+
+    function renderSettingsCard(card) {
+        const buttons = LOCATIONS.map((option) => el('button', {
+            type: 'button',
+            class: 'tb-choice',
+            role: 'radio',
+            'aria-checked': String(option.id === defaultLocationId),
+            'data-value': String(option.id),
+            html: tbIcon(option.icon),
+            onclick: () => {
+                defaultLocationId = option.id
+                chrome.storage.sync.set({ [STORAGE_KEY_DEFAULT_LOCATION]: option.id })
+                buttons.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.value === String(option.id))))
+            }
+        }, [el('span', { text: option.name })]))
+
+        card.replaceChildren(
+            el('h3', { class: 'tb-card-title', html: `${tbIcon('settings')}<span>Settings</span>` }),
+            el('p', { class: 'tb-card-subtitle', text: 'Saved to your browser profile and used on your next visits.' }),
+            el('div', { class: 'tb-field-label', text: 'Default office' }),
+            el('p', { class: 'tb-card-subtitle tb-field-help', text: 'Selected under “Worked From” whenever you create a new entry.' }),
+            el('div', { class: 'tb-choices tb-locations', role: 'radiogroup', 'aria-label': 'Default office' }, buttons),
+            el('div', { class: 'tb-card-buttons' }, [
+                el('button', { type: 'button', class: 'tb-button', text: 'Done', onclick: card.tbClose })
+            ])
+        )
     }
 
     function renderManageCard(card) {

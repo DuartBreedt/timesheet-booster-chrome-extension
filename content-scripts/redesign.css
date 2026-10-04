@@ -166,7 +166,8 @@ html .tb-header-button:active {
     transform: scale(0.97);
 }
 
-html .tb-theme-toggle {
+html .tb-theme-toggle,
+html .tb-settings-button {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -181,16 +182,19 @@ html .tb-theme-toggle {
     cursor: pointer;
 }
 
-html .tb-theme-toggle:hover {
+html .tb-theme-toggle:hover,
+html .tb-settings-button:hover {
     background: var(--tb-hover);
 }
 
-html .tb-theme-toggle:focus-visible {
+html .tb-theme-toggle:focus-visible,
+html .tb-settings-button:focus-visible {
     outline: 2px solid var(--tb-blue);
     outline-offset: 2px;
 }
 
-html .tb-theme-toggle .tb-icon {
+html .tb-theme-toggle .tb-icon,
+html .tb-settings-button .tb-icon {
     width: 16px;
     height: 16px;
 }
@@ -236,6 +240,14 @@ html .tb-dialog {
 
 html .tb-dialog::backdrop {
     background: rgba(15, 23, 42, 0.45);
+}
+
+html .tb-settings .tb-field-help {
+    margin: -2px 0 12px;
+}
+
+html .tb-settings .tb-choices {
+    margin-bottom: 4px;
 }
 
 html .tb-dialog .tb-template-list {
@@ -789,7 +801,8 @@ html .tb-choice:focus-visible {
     outline-offset: 2px;
 }
 
-html .tb-locations .tb-choice[aria-pressed="true"] {
+html .tb-locations .tb-choice[aria-pressed="true"],
+html .tb-locations .tb-choice[aria-checked="true"] {
     color: #fff;
     background: var(--tb-blue);
     border-color: var(--tb-blue);
@@ -1034,8 +1047,58 @@ html .timeEntry-container:not(.tb-has-quick) .timeEntry-content {
     margin: 16px;
 }
 
+/* Entry form: description | ticket + time | sentiment + billable, then Worked From and Save as template rows */
+html .timeEntry-container .timeEntry-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    /* The card stretches to the Templates card's height; keep the rows packed at the top */
+    align-content: flex-start;
+    column-gap: 20px;
+    row-gap: 14px;
+}
+
+html .timeEntry-content > [data-bind="foreach: errors"]:empty {
+    display: none;
+}
+
+html .timeEntry-content > [data-bind="foreach: errors"],
+html .timeEntry-content-input-block:has([data-bind="foreach: locations"]),
+html .timeEntry-content > .tb-save-template {
+    flex-basis: 100%;
+}
+
 html .timeEntry-content-input-block {
-    margin: 8px 16px 8px 0;
+    margin: 0;
+}
+
+/* The timesheet pads Worked From with inline styles and a trailing <br> */
+html .timeEntry-content-input-block:has([data-bind="foreach: locations"]) {
+    padding-top: 0 !important;
+}
+
+html .timeEntry-content-input-block:has([data-bind="foreach: locations"]) br {
+    display: none;
+}
+
+html .timeEntry-content-input-block:has([data-bind="foreach: locations"]) > div {
+    align-items: center;
+    gap: 12px;
+    padding-top: 0 !important;
+}
+
+html .timeEntry-content .timeEntry-label {
+    height: auto;
+    margin: 0;
+    padding: 0;
+    font: 700 13px var(--tb-font);
+    color: var(--tb-ink-soft);
+}
+
+html .timeEntry-content [data-bind="foreach: locations"] {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 0 !important;
 }
 
 html .timeEntry-banner {
@@ -1136,12 +1199,58 @@ html .timeEntry-content .sentiment-button.active {
     border: 2px solid currentColor;
 }
 
+/* Worked From: pills that behave like radios, with a tick on the selected one */
 html .timeEntry-radio-group {
-    margin-right: 8px;
-    padding: 0 14px 0 10px;
-    font-weight: 600;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    margin: 0;
+    padding: 0 16px;
+    font: 600 13px var(--tb-font);
+    color: var(--tb-ink-soft);
+    background-color: var(--tb-surface);
+    border: 1px solid var(--tb-control-border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+html .timeEntry-radio-group:hover {
+    background-color: var(--tb-hover);
+    border-color: var(--tb-control-border-hover);
+}
+
+/* Still focusable and arrow-key operable, just not visible */
+html .timeEntry-radio-group input[type="radio"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+html .timeEntry-radio-group:has(input:checked) {
+    padding-left: 11px;
+    color: #fff;
     background-color: var(--tb-blue);
-    border-radius: 8px;
+    border-color: var(--tb-blue);
+}
+
+html .timeEntry-radio-group:has(input:checked)::before {
+    content: "";
+    width: 15px;
+    height: 15px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+html .timeEntry-radio-group:has(input:focus-visible) {
+    outline: 2px solid var(--tb-blue);
+    outline-offset: 2px;
 }
 
 html .tb-save-template {
@@ -1149,8 +1258,7 @@ html .tb-save-template {
     flex-wrap: wrap;
     align-items: center;
     gap: 12px;
-    margin-top: 12px;
-    padding-top: 12px;
+    padding-top: 14px;
     border-top: 1px solid var(--tb-line);
 }
 
