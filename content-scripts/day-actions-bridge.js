@@ -76,13 +76,14 @@
     }
 
     // same shape as timeEntryContent's getData()
-    function toRequest(widget, entry, entryId) {
+    // date (YYYY-MM-DD) defaults to the widget's own day
+    function toRequest(widget, entry, entryId, date) {
         const hours = Math.floor(entry.DurationInHours);
         const locationId = entry.WorkedFromLocationId;
         return {
             TimesheetEntryId: entryId,
             EmployeeId: widget.options.employeeId,
-            Date: formatDate(widget.options.date),
+            Date: date || formatDate(widget.options.date),
             CategoryId: entry.CategoryId,
             Hours: hours,
             Minutes: Math.round((entry.DurationInHours - hours) * 60),
@@ -196,11 +197,134 @@
         return { ok: true, message: `Added "${template.name}" to the day.` };
     }
 
+    // There is no reliable "change date" request, so a move is: create a copy on the target day, then delete
+    // the original. The original is only deleted once the copy exists, so a failure leaves a duplicate
+    // rather than losing the entry.
+    async function moveEntry(command) {
+        const widget = getDayWidget(command.date);
+        const entryContent = widget && widget.entryContent;
+        const entryId = entryContent && entryContent.options.entryId;
+        const entry = entryId && widget.options.timesheetEntries.find((e) => e.EntryId === entryId);
+        if (!entry) return { ok: false, message: 'Could not find the entry being edited.' };
+        if (!command.targetDate || command.targetDate === command.date) {
+            return { ok: false, message: 'Pick a different day to move the entry to.' };
+        }
+
+        const created = await post(widget.options.submitUrl, toRequest(widget, entry, 0, command.targetDate));
+        if (!created.success) {
+            if (created.RedirectUrl) window.open(created.RedirectUrl);
+            return { ok: false, message: `Could not create the entry on ${command.targetLabel}: ${errorText(created)}` };
+        }
+
+        const removed = await post(widget.options.deleteUrl, { timesheetEntryId: entry.EntryId });
+
+        // Close the edit form (this panel lives inside it), then redraw both days
+        entryContent.options.onCancel();
+        if (removed.success) {
+            widget.options.timesheetEntries = widget.options.timesheetEntries.filter((e) => e !== entry);
+            widget._refresh();
+            widget.refreshHourEntry();
+        }
+        const target = getDayWidget(command.targetDate);
+        if (target) target._addTimesheetEntry(Object.assign({}, entry, { EntryId: created.entryId }));
+
+        if (!removed.success) {
+            return {
+                ok: false,
+                message: `Copied to ${command.targetLabel}, but the original could not be deleted (${errorText(removed)}). ` +
+                    'Delete it yourself so the time is not counted twice.'
+            };
+        }
+        return { ok: true, message: `Moved "${entry.CategoryName}" to ${command.targetLabel}.` };
+    }
+
     function emit(type, detail) {
         document.dispatchEvent(new CustomEvent(type, { detail: JSON.stringify(detail) }));
     }
 
-    const handlers = { bulkEdit: bulkEdit, applyTemplate: applyTemplate };
+    function redraw(widget) {
+        widget._refresh();
+        widget.refreshHourEntry();
+    }
+
+    function countEntries(count) {
+        return `${count} ${count === 1 ? 'entry' : 'entries'}`;
+    }
+
+    // Moves every entry that isn't signed off, each one copy-then-delete like moveEntry
+    async function moveDay(command) {
+        const widget = getDayWidget(command.date);
+        if (!widget) return { ok: false, message: 'Could not find that day on the timesheet.' };
+        if (!command.targetDate || command.targetDate === command.date) {
+            return { ok: false, message: 'Pick a different day to move the entries to.' };
+        }
+        const movable = widget.options.timesheetEntries.filter((entry) => !entry.IsSignedOff);
+        if (!movable.length) return { ok: false, message: 'There are no entries on this day that can be moved.' };
+
+        // Any open form (this panel lives inside it) would point at entries that are about to move
+        if (widget.entryContent) widget.entryContent.options.onCancel();
+        const target = getDayWidget(command.targetDate);
+        const notCopied = [];
+        const notDeleted = [];
+        let moved = 0;
+
+        for (const entry of movable) {
+            const created = await post(widget.options.submitUrl, toRequest(widget, entry, 0, command.targetDate));
+            if (!created.success) {
+                notCopied.push(`${entry.CategoryName} (${errorText(created)})`);
+                continue;
+            }
+            if (target) target.options.timesheetEntries.push(Object.assign({}, entry, { EntryId: created.entryId }));
+
+            const removed = await post(widget.options.deleteUrl, { timesheetEntryId: entry.EntryId });
+            if (removed.success) {
+                widget.options.timesheetEntries = widget.options.timesheetEntries.filter((e) => e !== entry);
+                moved++;
+            } else {
+                notDeleted.push(entry.CategoryName);
+            }
+        }
+
+        redraw(widget);
+        if (target) redraw(target);
+
+        let message = `Moved ${countEntries(moved)} to ${command.targetLabel}.`;
+        if (notCopied.length) message += ` Not moved: ${notCopied.join('; ')}.`;
+        if (notDeleted.length) {
+            message += ` Copied but the original could not be deleted, so delete it yourself: ${notDeleted.join(', ')}.`;
+        }
+        return { ok: !notCopied.length && !notDeleted.length, message: message };
+    }
+
+    async function deleteDay(command) {
+        const widget = getDayWidget(command.date);
+        if (!widget) return { ok: false, message: 'Could not find that day on the timesheet.' };
+        const deletable = widget.options.timesheetEntries.filter((entry) => !entry.IsSignedOff);
+        if (!deletable.length) return { ok: false, message: 'There are no entries on this day that can be deleted.' };
+
+        if (widget.entryContent) widget.entryContent.options.onCancel();
+        const failures = [];
+        let deleted = 0;
+
+        for (const entry of deletable) {
+            const removed = await post(widget.options.deleteUrl, { timesheetEntryId: entry.EntryId });
+            if (removed.success) {
+                widget.options.timesheetEntries = widget.options.timesheetEntries.filter((e) => e !== entry);
+                deleted++;
+            } else {
+                failures.push(`${entry.CategoryName} (${errorText(removed)})`);
+            }
+        }
+
+        redraw(widget);
+        const skipped = widget.options.timesheetEntries.length - failures.length;
+        let message = `Deleted ${deleted} of ${countEntries(deletable.length)}.`;
+        if (skipped) message += ` ${skipped} signed-off ${skipped === 1 ? 'entry was' : 'entries were'} kept.`;
+        if (failures.length) message += ` Failed: ${failures.join('; ')}.`;
+        return { ok: !failures.length, message: message };
+    }
+
+    const handlers = { bulkEdit: bulkEdit, applyTemplate: applyTemplate, moveEntry: moveEntry, moveDay: moveDay, deleteDay: deleteDay };
 
     document.addEventListener('tb:command', async (event) => {
         let command;

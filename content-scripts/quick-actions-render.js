@@ -14,14 +14,16 @@
         { id: 5, name: 'Other', icon: 'dots' }
     ];
     const SENTIMENTS = [
-        { id: 2, name: 'Happy', icon: 'smile', buttonClass: 'sentiment-happy' },
+        // same order as the timesheet's own sentiment buttons
+        { id: 3, name: 'Sad', icon: 'frown', buttonClass: 'sentiment-sad' },
         { id: 1, name: 'Neutral', icon: 'meh', buttonClass: 'sentiment-neutral' },
-        { id: 3, name: 'Sad', icon: 'frown', buttonClass: 'sentiment-sad' }
+        { id: 2, name: 'Happy', icon: 'smile', buttonClass: 'sentiment-happy' }
     ];
 
     // see redesign.css
     const VIEW_FORM = 'form';
     const VIEW_BULK = 'bulk';
+    const VIEW_MOVE = 'move';
 
     let templates = [];
     // home until changed in settings
@@ -172,7 +174,11 @@
             el('div', { class: 'tb-quick-date', text: getDayLabel(day) }),
             el('div', { class: 'tb-quick-total', html: tbIcon('clock') }, [total]),
             el('div', { class: 'tb-quick-heading', html: `${tbIcon('bolt')}<span>Quick Actions</span>` }),
-            buildActionButton(VIEW_BULK, 'tb-action--bulk', 'pencil', 'Bulk Edit Day', 'Set from location + sentiment', toggleView)
+            buildActionButton(VIEW_BULK, 'tb-action--bulk', 'pencil', 'Bulk Edit Day', 'Office, sentiment, move or delete', toggleView),
+            // only saved entries can be moved
+            container.dataset.tbMode === 'edit'
+                ? buildActionButton(VIEW_MOVE, 'tb-action--move', 'move', 'Move Entry', 'Captured on the wrong day?', toggleView)
+                : null
         ])
 
         const templatesCard = el('div', { class: 'tb-card tb-templates' })
@@ -184,7 +190,9 @@
         container.append(
             el('div', { class: 'tb-or', 'aria-hidden': 'true' }, [el('span', { text: 'OR' })]),
             templatesCard,
-            buildBulkCard(day, showForm, refreshTotal)
+            buildBulkCard(day, showForm, refreshTotal),
+            // append() would turn a null into the text "null"
+            ...(container.dataset.tbMode === 'edit' ? [buildMoveCard(day, container, showForm)] : [])
         )
         container.classList.add('tb-has-quick')
         container.dataset.tbView = VIEW_FORM
@@ -237,6 +245,7 @@
         })
 
         if (view === VIEW_BULK) container.querySelector('.tb-bulk').tbPrefill()
+        if (view === VIEW_MOVE) container.querySelector('.tb-move').tbPrefill()
 
         const focusTarget = view === VIEW_FORM
             ? container.querySelector('.timeEntry-content textarea')
@@ -302,44 +311,91 @@
         return { group, setValue, getValue: () => value }
     }
 
+    // Every change applies to the whole day, so each is a row of the same shape: what | how | do it.
+    // Signed-off entries are never changed.
     function buildBulkCard(day, close, refreshTotal) {
         const status = el('p', { class: 'tb-status', role: 'status' })
-        const update = () => { applyButton.disabled = !locations.getValue() && !sentiments.getValue() }
-        const locations = buildChoiceGroup('tb-locations', 'Worked from', LOCATIONS, update)
-        const sentiments = buildChoiceGroup('tb-sentiments', 'Sentiment', SENTIMENTS, update)
 
-        const applyButton = el('button', {
+        const run = async (button, busyText, command, closesForm) => {
+            button.disabled = true
+            status.className = 'tb-status'
+            status.textContent = busyText
+            const result = await sendCommand(Object.assign({ date: day.dataset.tbDate }, command))
+            // Moving or deleting closes the entry form, taking this panel with it
+            if (closesForm) toast(result.message, !result.ok)
+            status.className = `tb-status ${result.ok ? 'tb-status--ok' : 'tb-status--error'}`
+            status.textContent = result.message
+            refreshTotal()
+            updateButtons()
+        }
+
+        const locations = buildChoiceGroup('tb-locations', 'Worked from', LOCATIONS, () => updateButtons())
+        const sentiments = buildChoiceGroup('tb-sentiments', 'Sentiment', SENTIMENTS, () => updateButtons())
+        const dateInput = el('input', {
+            type: 'date',
+            class: 'tb-date-input',
+            id: `tb-move-all-${day.dataset.tbDate}`,
+            'aria-label': 'Move all entries to',
+            oninput: () => updateButtons()
+        })
+
+        const officeButton = el('button', {
             type: 'button',
             class: 'tb-button tb-button--primary',
-            disabled: true,
-            html: `${tbIcon('check')}<span>Apply to Day</span>`,
-            onclick: async () => {
-                applyButton.disabled = true
-                status.className = 'tb-status'
-                status.textContent = 'Updating entries…'
-                const result = await sendCommand({
-                    type: 'bulkEdit',
-                    date: day.dataset.tbDate,
-                    locationId: locations.getValue(),
-                    sentimentId: sentiments.getValue()
-                })
-                status.className = `tb-status ${result.ok ? 'tb-status--ok' : 'tb-status--error'}`
-                status.textContent = result.message
-                refreshTotal()
-                update()
+            html: `${tbIcon('check')}<span>Set office</span>`,
+            onclick: () => run(officeButton, 'Updating entries…', { type: 'bulkEdit', locationId: locations.getValue() })
+        })
+        const sentimentButton = el('button', {
+            type: 'button',
+            class: 'tb-button tb-button--primary',
+            html: `${tbIcon('check')}<span>Set sentiment</span>`,
+            onclick: () => run(sentimentButton, 'Updating entries…', { type: 'bulkEdit', sentimentId: sentiments.getValue() })
+        })
+        const moveButton = el('button', {
+            type: 'button',
+            class: 'tb-button tb-button--primary',
+            html: `${tbIcon('move')}<span>Move all</span>`,
+            onclick: () => run(moveButton, 'Moving entries…', {
+                type: 'moveDay',
+                targetDate: dateInput.value,
+                targetLabel: formatDayLabel(dateInput.value)
+            }, true)
+        })
+        const deleteButton = el('button', {
+            type: 'button',
+            class: 'tb-button tb-button--danger',
+            html: `${tbIcon('close')}<span>Delete all</span>`,
+            onclick: () => {
+                if (!confirm(`Delete all entries on ${getDayLabel(day)}? Signed-off entries are kept. This cannot be undone.`)) return;
+                run(deleteButton, 'Deleting entries…', { type: 'deleteDay' }, true)
             }
         })
 
+        function updateButtons() {
+            officeButton.disabled = !locations.getValue()
+            sentimentButton.disabled = !sentiments.getValue()
+            moveButton.disabled = !dateInput.value || dateInput.value === day.dataset.tbDate
+            deleteButton.disabled = false
+        }
+
+        const row = (title, help, control, button) => el('div', { class: 'tb-bulk-row' }, [
+            el('div', { class: 'tb-bulk-row-label' }, [
+                el('strong', { text: title }),
+                el('small', { text: help })
+            ]),
+            el('div', { class: 'tb-bulk-row-control' }, [control]),
+            button
+        ])
+
         const card = el('div', { class: 'tb-card tb-bulk' }, [
             el('h3', { class: 'tb-card-title', html: `${tbIcon('pencil')}<span>Bulk Edit Day</span>` }),
-            el('p', { class: 'tb-card-subtitle', text: 'Apply the same details to all entries for this day.' }),
-            el('div', { class: 'tb-field-label', text: 'From (Worked From)' }),
-            locations.group,
-            el('div', { class: 'tb-field-label', text: 'Sentiment' }),
-            sentiments.group,
+            el('p', { class: 'tb-card-subtitle', text: 'Each change applies to every entry on this day. Signed-off entries are never changed.' }),
+            row('Worked from', 'Office for every entry', locations.group, officeButton),
+            row('Sentiment', 'Sentiment for every entry', sentiments.group, sentimentButton),
+            row('Move entries', 'Captured on the wrong day?', dateInput, moveButton),
+            row('Delete entries', 'Cannot be undone', el('span', { class: 'tb-bulk-row-note', text: 'Removes every entry on this day.' }), deleteButton),
             el('div', { class: 'tb-card-buttons' }, [
-                applyButton,
-                el('button', { type: 'button', class: 'tb-button', text: 'Cancel', onclick: close })
+                el('button', { type: 'button', class: 'tb-button', text: 'Close', onclick: close })
             ]),
             status
         ])
@@ -352,6 +408,71 @@
             const sentiment = form && SENTIMENTS.find((s) => form.querySelector(`.${s.buttonClass}.active`))
             locations.setValue(radio ? Number(radio.value) : locations.getValue())
             sentiments.setValue(sentiment ? sentiment.id : sentiments.getValue())
+            dateInput.value = day.dataset.tbDate
+            updateButtons()
+        }
+
+        return card
+    }
+
+    function formatDayLabel(dateKey) {
+        const [year, month, date] = dateKey.split('-').map(Number)
+        return new Date(year, month - 1, date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })
+    }
+
+    function buildMoveCard(day, container, close) {
+        const status = el('p', { class: 'tb-status', role: 'status' })
+        const summary = el('div', { class: 'tb-move-summary' })
+        const dateInput = el('input', {
+            type: 'date',
+            class: 'tb-date-input',
+            id: `tb-move-date-${day.dataset.tbDate}`,
+            oninput: () => update()
+        })
+        const update = () => { moveButton.disabled = !dateInput.value || dateInput.value === day.dataset.tbDate }
+
+        const moveButton = el('button', {
+            type: 'button',
+            class: 'tb-button tb-button--primary',
+            disabled: true,
+            html: `${tbIcon('move')}<span>Move Entry</span>`,
+            onclick: async () => {
+                moveButton.disabled = true
+                status.className = 'tb-status'
+                status.textContent = 'Moving entry…'
+                const targetLabel = formatDayLabel(dateInput.value)
+                const result = await sendCommand({ type: 'moveEntry', date: day.dataset.tbDate, targetDate: dateInput.value, targetLabel })
+                // On success the edit form closes and takes this card with it
+                toast(result.message, !result.ok)
+                status.className = `tb-status ${result.ok ? 'tb-status--ok' : 'tb-status--error'}`
+                status.textContent = result.message
+                update()
+            }
+        })
+
+        const card = el('div', { class: 'tb-card tb-move' }, [
+            el('h3', { class: 'tb-card-title', html: `${tbIcon('move')}<span>Move Entry</span>` }),
+            el('p', { class: 'tb-card-subtitle', text: 'Move this entry to the day it should have been captured on. Unsaved changes in the form are not moved.' }),
+            summary,
+            el('label', { class: 'tb-field-label', for: dateInput.id, text: 'Move to' }),
+            dateInput,
+            el('div', { class: 'tb-card-buttons' }, [
+                moveButton,
+                el('button', { type: 'button', class: 'tb-button', text: 'Cancel', onclick: close })
+            ]),
+            status
+        ])
+
+        card.tbPrefill = () => {
+            status.textContent = ''
+            const banner = container.querySelector('.timeEntry-banner')
+            const time = container.querySelector('.timeEntry-content-time input')
+            summary.replaceChildren(
+                el('strong', { text: banner ? banner.textContent.trim() : '' }),
+                el('span', { text: `${getDayLabel(day)}${time && time.value ? ` • ${time.value}` : ''}` })
+            )
+            dateInput.value = day.dataset.tbDate
+            update()
         }
 
         return card

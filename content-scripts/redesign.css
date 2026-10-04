@@ -591,7 +591,8 @@ html .timeEntry-container.tb-has-quick:not([data-tb-view="form"]) {
 html .tb-has-quick:not([data-tb-view="form"]) > .timeEntry-content,
 html .tb-has-quick:not([data-tb-view="form"]) > .tb-or,
 html .tb-has-quick:not([data-tb-view="form"]) > .tb-templates,
-html .tb-has-quick:not([data-tb-view="bulk"]) > .tb-bulk {
+html .tb-has-quick:not([data-tb-view="bulk"]) > .tb-bulk,
+html .tb-has-quick:not([data-tb-view="move"]) > .tb-move {
     display: none;
 }
 
@@ -666,6 +667,15 @@ html .tb-action:active {
 
 html .tb-action:focus-visible {
     outline: none;
+}
+
+html .tb-action--move {
+    background: var(--tb-purple);
+}
+
+html .tb-action--move[aria-pressed="true"],
+html .tb-action--move:focus-visible {
+    box-shadow: 0 0 0 3px var(--tb-surface), 0 0 0 5px var(--tb-purple);
 }
 
 html .tb-action--bulk[aria-pressed="true"],
@@ -874,6 +884,100 @@ html .tb-status--ok {
 
 html .tb-status--error {
     color: var(--tb-danger);
+}
+
+/* Move Entry */
+/* Bulk Edit Day: one row per change (label | controls | button) */
+html .tb-bulk-row {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr) 170px;
+    align-items: center;
+    gap: 12px 24px;
+    padding: 14px 0;
+    border-top: 1px solid var(--tb-line);
+}
+
+html .tb-bulk-row:first-of-type {
+    border-top: 0;
+    padding-top: 4px;
+}
+
+html .tb-bulk-row-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+html .tb-bulk-row-label strong {
+    font-size: 14px;
+    color: var(--tb-ink-soft);
+}
+
+html .tb-bulk-row-label small,
+html .tb-bulk-row-note {
+    font-size: 12.5px;
+    color: var(--tb-muted);
+}
+
+html .tb-bulk-row > .tb-button {
+    width: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 1100px) {
+    html .tb-bulk-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    html .tb-bulk-row > .tb-button {
+        justify-self: start;
+        width: auto;
+        min-width: 150px;
+    }
+}
+
+html .tb-button--danger {
+    color: var(--tb-on-accent);
+    background: var(--tb-danger-fill);
+    border-color: var(--tb-danger-fill);
+}
+
+html .tb-button--danger:hover {
+    background: color-mix(in srgb, var(--tb-danger-fill) 88%, #000);
+}
+
+html .tb-move-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    font-size: 13px;
+    background: var(--tb-subtle);
+    border-radius: 8px;
+}
+
+html .tb-move-summary span {
+    color: var(--tb-muted);
+}
+
+html .tb-date-input[type="date"] {
+    box-sizing: border-box;
+    width: 220px;
+    height: 40px;
+    margin: 0;
+    padding: 0 10px;
+    font: 500 14px var(--tb-font);
+    color: var(--tb-ink);
+    background: var(--tb-subtle);
+    border: 1px solid var(--tb-control-border);
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+html .tb-date-input[type="date"]:focus {
+    border-color: var(--tb-blue-text);
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tb-blue-text) 25%, transparent);
 }
 
 html .tb-template-select:focus-visible {
