@@ -1,0 +1,13 @@
+{
+    "name": "timesheet-booster",
+    "private": true,
+    "description": "Contract tests for the Timesheet Booster extension",
+    "scripts": {
+        "test:login": "node tests/contract/login.js",
+        "test:contract": "playwright test",
+        "test:contract:writes": "TB_ALLOW_WRITES=1 playwright test writes.spec.js"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.63.0"
+    }
+}
