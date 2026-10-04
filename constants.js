@@ -1,5 +1,6 @@
 STORAGE_KEY_PROJECTS = 'projects'
 STORAGE_KEY_TEMPLATES = 'templates'
+STORAGE_KEY_DARK_MODE = 'darkMode'
 
 PROJECT_PARENT_SELECTOR = "[data-bind='foreach: visibleProjects']";
 CATEGORIES_PARENT_SELECTOR = "[data-bind='foreach: visibleCategories']";

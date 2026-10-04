@@ -58,7 +58,7 @@
 
 .color-picker:hover,
 .pin:hover {
-    background-color: color-mix(in srgb, var(--tb-color, #888) 20%, #FFF);
+    background-color: color-mix(in srgb, var(--tb-color, #888) 20%, var(--tb-mix-base, #FFF));
 }
 
 .color-picker:hover img,
@@ -70,7 +70,7 @@
 .pin:focus-visible {
     z-index: 3;
     outline: none;
-    box-shadow: 0 0 0 2px #FFF, 0 0 0 4px var(--tb-color, #333);
+    box-shadow: 0 0 0 2px var(--tb-surface, #FFF), 0 0 0 4px var(--tb-color, #333);
 }
 
 .color-picker:focus-visible img,

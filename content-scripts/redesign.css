@@ -3,15 +3,35 @@
  * Loaded from the manifest so it applies before the page paints. Overrides Bootstrap 2 and the
  * timesheet's own styles; knockout's inline styles are not !important, so !important here wins over them.
  * Item colors come from --tb-color, set per item by projects-and-categories-render.js.
+ *
+ * Every selector starts with `html`: manifest CSS is injected before the page's own stylesheets, so
+ * without the extra specificity the timesheet's equally specific rules would win.
  */
 
 :root {
     --tb-ink: #1f2937;
+    --tb-ink-soft: #374151;
     --tb-muted: #6b7280;
+    --tb-faint: #9ca3af;
     --tb-line: #e3e8ef;
+    --tb-page: #ffffff;
     --tb-surface: #ffffff;
+    --tb-subtle: #f7f9fc;
+    --tb-hover: #f1f5fb;
     --tb-panel: #f3f7fc;
-    --tb-track: #9aa4b1;
+    --tb-card-border: #dbe5f1;
+    --tb-control-border: #cfd8e3;
+    --tb-control-border-hover: #b9c6d8;
+    --tb-track: #b4cbea;
+    /* Sentiment face colors (entry form and Bulk Edit) */
+    --tb-happy: #1e8a4c;
+    --tb-neutral: #b98500;
+    --tb-sad: #c62828;
+    /* What item colors are tinted towards: light tints on white, dark tints on the dark surface */
+    --tb-mix-base: #ffffff;
+    --tb-chip-ink-base: #111827;
+    --tb-green-ink: #1d5f27;
+    --tb-toast: #1f2937;
     --tb-blue: #2b6fd8;
     --tb-blue-dark: #1f5bb8;
     --tb-purple: #6a46c2;
@@ -23,13 +43,13 @@
     --tb-font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-body {
+html body {
     font-family: var(--tb-font);
     color: var(--tb-ink);
-    background: var(--tb-surface);
+    background: var(--tb-page);
 }
 
-.tb-icon {
+html .tb-icon {
     width: 1.15em;
     height: 1.15em;
     flex: none;
@@ -38,11 +58,11 @@ body {
 /* ---------- Header row: title + item lists | calendar ---------- */
 
 /* Replaced by the .tb-header title */
-#nav-title {
+html #nav-title {
     display: none;
 }
 
-.row-fluid:has(> .span9 [data-bind='foreach: visibleProjects']) {
+html .row-fluid:has(> .span9 [data-bind='foreach: visibleProjects']) {
     display: flex;
     align-items: flex-start;
     gap: 24px;
@@ -52,12 +72,12 @@ body {
     padding-right: 52px;
 }
 
-.row-fluid:has(> .span9 [data-bind='foreach: visibleProjects'])::before,
-.row-fluid:has(> .span9 [data-bind='foreach: visibleProjects'])::after {
+html .row-fluid:has(> .span9 [data-bind='foreach: visibleProjects'])::before,
+html .row-fluid:has(> .span9 [data-bind='foreach: visibleProjects'])::after {
     content: none;
 }
 
-.row-fluid > .span9:has([data-bind='foreach: visibleProjects']) {
+html .row-fluid > .span9:has([data-bind='foreach: visibleProjects']) {
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -68,22 +88,22 @@ body {
     margin: 0;
 }
 
-.span9 > .timesheet-sectionheading {
+html .span9 > .timesheet-sectionheading {
     display: none;
 }
 
-.span9 > .timesheet-section {
+html .span9 > .timesheet-section {
     margin: 0;
 }
 
-.row-fluid > .span3:has(#datepicker) {
+html .row-fluid > .span3:has(#datepicker) {
     flex: none;
     width: auto;
     float: none;
     margin: 0;
 }
 
-.tb-title {
+html .tb-title {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -96,22 +116,22 @@ body {
     color: var(--tb-ink);
 }
 
-.tb-title .tb-icon {
+html .tb-title .tb-icon {
     width: 32px;
     height: 32px;
     color: var(--tb-green);
     stroke-width: 2.5;
 }
 
-.tb-header-actions {
+html .tb-header-actions {
     flex: none;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    width: 116px;
+    width: 136px;
 }
 
-.tb-header-button {
+html .tb-header-button {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -121,58 +141,118 @@ body {
     padding: 10px 8px;
     font: 700 14px/1.2 var(--tb-font);
     color: var(--tb-green);
-    background: #eef8ec;
-    border: 2px solid #8cc68f;
+    background: color-mix(in srgb, var(--tb-green) 10%, var(--tb-mix-base));
+    border: 2px solid color-mix(in srgb, var(--tb-green) 55%, var(--tb-mix-base));
     border-radius: var(--tb-radius);
     cursor: pointer;
     transition: background-color 120ms ease, transform 80ms ease;
 }
 
-.tb-header-button .tb-icon {
+html .tb-header-button .tb-icon {
     width: 22px;
     height: 22px;
 }
 
-.tb-header-button:hover {
+html .tb-header-button:hover {
     background: var(--tb-green-soft);
 }
 
-.tb-header-button:focus-visible {
+html .tb-header-button:focus-visible {
     outline: 3px solid color-mix(in srgb, var(--tb-green) 45%, transparent);
     outline-offset: 2px;
 }
 
-.tb-header-button:active {
+html .tb-header-button:active {
     transform: scale(0.97);
 }
 
+html .tb-theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 10px;
+    font: 600 12.5px var(--tb-font);
+    white-space: nowrap;
+    color: var(--tb-ink);
+    background: var(--tb-surface);
+    border: 1px solid var(--tb-control-border);
+    border-radius: var(--tb-radius);
+    cursor: pointer;
+}
+
+html .tb-theme-toggle:hover {
+    background: var(--tb-hover);
+}
+
+html .tb-theme-toggle:focus-visible {
+    outline: 2px solid var(--tb-blue);
+    outline-offset: 2px;
+}
+
+html .tb-theme-toggle .tb-icon {
+    width: 16px;
+    height: 16px;
+}
+
+html .tb-switch {
+    position: relative;
+    flex: none;
+    width: 26px;
+    height: 15px;
+    margin-left: auto;
+    background: var(--tb-control-border);
+    border-radius: 999px;
+    transition: background-color 150ms ease;
+}
+
+html .tb-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 11px;
+    height: 11px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 150ms ease;
+}
+
+html .tb-theme-toggle[aria-checked="true"] .tb-switch {
+    background: var(--tb-blue);
+}
+
+html .tb-theme-toggle[aria-checked="true"] .tb-switch::after {
+    transform: translateX(11px);
+}
+
 /* Manage Templates dialog */
-.tb-dialog {
+html .tb-dialog {
     width: min(720px, calc(100vw - 32px));
     padding: 0;
     background: transparent;
     border: 0;
 }
 
-.tb-dialog::backdrop {
+html .tb-dialog::backdrop {
     background: rgba(15, 23, 42, 0.45);
 }
 
-.tb-dialog .tb-template-list {
+html .tb-dialog .tb-template-list {
     max-height: 60vh;
 }
 
 @media (max-width: 1100px) {
-    .row-fluid:has(> .span9 [data-bind='foreach: visibleProjects']) {
+    html .row-fluid:has(> .span9 [data-bind='foreach: visibleProjects']) {
         flex-wrap: wrap;
     }
 
-    .row-fluid > .span9:has([data-bind='foreach: visibleProjects']) {
+    html .row-fluid > .span9:has([data-bind='foreach: visibleProjects']) {
         flex-basis: 100%;
     }
 }
 
-.timesheet-sidebutton {
+html .timesheet-sidebutton {
     margin-right: 8px;
     padding: 8px 11px;
     border-radius: 8px;
@@ -181,14 +261,14 @@ body {
 
 /* ---------- Project / category chips ---------- */
 
-.timesheet-section > [data-bind^='foreach'] {
+html .timesheet-section > [data-bind^='foreach'] {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
 
 /* violations.css makes every div here a flex row; chips and their wrappers are plain blocks */
-.timesheet-section .span2 {
+html .timesheet-section .span2 {
     display: block;
     flex: 1 1 130px;
     min-width: 0;
@@ -201,15 +281,15 @@ body {
 }
 
 /* The "Other" dropdowns always come last, after pinned and unpinned items */
-.timesheet-section .span2:has(.dropdown-toggle) {
+html .timesheet-section .span2:has(.dropdown-toggle) {
     order: 9999 !important;
 }
 
-.timesheet-section .span2 > div {
+html .timesheet-section .span2 > div {
     display: block;
 }
 
-.timesheet-section .timesheetlistitem {
+html .timesheet-section .timesheetlistitem {
     --tb-item: var(--tb-color, #8a8e93);
     position: relative;
     display: block;
@@ -223,21 +303,21 @@ body {
     font: 600 13px/42px var(--tb-font);
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: color-mix(in srgb, var(--tb-item) 75%, #111827) !important;
-    background-color: color-mix(in srgb, var(--tb-item) 10%, #fff) !important;
-    border: 1px solid color-mix(in srgb, var(--tb-item) 28%, #fff) !important;
+    color: color-mix(in srgb, var(--tb-item) 75%, var(--tb-chip-ink-base)) !important;
+    background-color: color-mix(in srgb, var(--tb-item) 10%, var(--tb-mix-base)) !important;
+    border: 1px solid color-mix(in srgb, var(--tb-item) 28%, var(--tb-mix-base)) !important;
     border-radius: var(--tb-radius) !important;
     box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
     transition: background-color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
 }
 
-.timesheet-section .timesheetlistitem:hover {
-    background-color: color-mix(in srgb, var(--tb-item) 18%, #fff) !important;
+html .timesheet-section .timesheetlistitem:hover {
+    background-color: color-mix(in srgb, var(--tb-item) 18%, var(--tb-mix-base)) !important;
     box-shadow: 0 2px 6px rgba(16, 24, 40, 0.1);
 }
 
 /* Avatar with the item's initials (set as data-tb-initial by redesign-render.js) */
-.timesheet-section .timesheetlistitem::before {
+html .timesheet-section .timesheetlistitem::before {
     content: attr(data-tb-initial);
     position: absolute;
     top: 50%;
@@ -249,29 +329,29 @@ body {
     text-align: center;
     letter-spacing: 0.02em;
     color: var(--tb-item);
-    background: color-mix(in srgb, var(--tb-item) 20%, #fff);
+    background: color-mix(in srgb, var(--tb-item) 20%, var(--tb-mix-base));
     border-radius: 50%;
 }
 
-.timesheet-section .timesheetlistitem.tb-active {
+html .timesheet-section .timesheetlistitem.tb-active {
     color: #fff !important;
     background-color: var(--tb-item) !important;
     border-color: var(--tb-item) !important;
     box-shadow: 0 2px 8px color-mix(in srgb, var(--tb-item) 45%, transparent);
 }
 
-.timesheet-section .timesheetlistitem.tb-active::before {
+html .timesheet-section .timesheetlistitem.tb-active::before {
     color: #fff;
     background: rgba(255, 255, 255, 0.25);
 }
 
-.timesheet-section .dropdown-toggle.timesheetlistitem > span {
+html .timesheet-section .dropdown-toggle.timesheetlistitem > span {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.timesheet-section .dropdown-toggle.timesheetlistitem .icon-chevron-down {
+html .timesheet-section .dropdown-toggle.timesheetlistitem .icon-chevron-down {
     position: absolute;
     top: 50%;
     right: 10px;
@@ -279,7 +359,7 @@ body {
     opacity: 0.5;
 }
 
-.timesheet-section .dropdown-menu {
+html .timesheet-section .dropdown-menu {
     max-height: 320px;
     overflow-y: auto;
     padding: 6px;
@@ -288,41 +368,41 @@ body {
     box-shadow: 0 8px 24px rgba(16, 24, 40, 0.14);
 }
 
-.timesheet-section .dropdown-menu a {
+html .timesheet-section .dropdown-menu a {
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 13px;
 }
 
 /* Pin and fill buttons: only shown on hover/focus, except while pinned or while the picker is open */
-.timesheet-section .timesheetlistitem .color-picker,
-.timesheet-section .timesheetlistitem .pin {
+html .timesheet-section .timesheetlistitem .color-picker,
+html .timesheet-section .timesheetlistitem .pin {
     width: 20px;
     height: 20px;
     opacity: 0;
     transition: opacity 120ms ease, background-color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
 }
 
-.timesheet-section .timesheetlistitem .pin {
+html .timesheet-section .timesheetlistitem .pin {
     border-radius: 0 var(--tb-radius) 0 6px;
 }
 
-.timesheet-section .timesheetlistitem .color-picker {
+html .timesheet-section .timesheetlistitem .color-picker {
     border-radius: 6px 0 var(--tb-radius) 0;
 }
 
-.timesheet-section .timesheetlistitem:hover .color-picker,
-.timesheet-section .timesheetlistitem:hover .pin,
-.timesheet-section .timesheetlistitem:focus-within .color-picker,
-.timesheet-section .timesheetlistitem:focus-within .pin,
-.timesheet-section .timesheetlistitem .pin.is-pinned,
-.timesheet-section .timesheetlistitem .color-picker.is-open {
+html .timesheet-section .timesheetlistitem:hover .color-picker,
+html .timesheet-section .timesheetlistitem:hover .pin,
+html .timesheet-section .timesheetlistitem:focus-within .color-picker,
+html .timesheet-section .timesheetlistitem:focus-within .pin,
+html .timesheet-section .timesheetlistitem .pin.is-pinned,
+html .timesheet-section .timesheetlistitem .color-picker.is-open {
     opacity: 1;
 }
 
 /* ---------- Calendar ---------- */
 
-#datepicker .datepicker-inline {
+html #datepicker .datepicker-inline {
     width: auto;
     padding: 10px 12px;
     background: var(--tb-surface);
@@ -331,70 +411,70 @@ body {
     box-shadow: var(--tb-shadow);
 }
 
-#datepicker .datepicker table {
+html #datepicker .datepicker table {
     border-collapse: separate;
     border-spacing: 0 3px;
 }
 
-#datepicker .datepicker th,
-#datepicker .datepicker td {
+html #datepicker .datepicker th,
+html #datepicker .datepicker td {
     width: 34px;
     height: 26px;
     font: 600 13px var(--tb-font);
     color: var(--tb-ink);
 }
 
-#datepicker .datepicker th.dow {
+html #datepicker .datepicker th.dow {
     font-weight: 700;
 }
 
-#datepicker .datepicker .datepicker-switch {
+html #datepicker .datepicker .datepicker-switch {
     font-size: 17px;
     font-weight: 700;
 }
 
-#datepicker .datepicker th.prev,
-#datepicker .datepicker th.next {
+html #datepicker .datepicker th.prev,
+html #datepicker .datepicker th.next {
     font-size: 0;
 }
 
-#datepicker .datepicker th.prev::before,
-#datepicker .datepicker th.next::before {
+html #datepicker .datepicker th.prev::before,
+html #datepicker .datepicker th.next::before {
     font-size: 22px;
     font-weight: 400;
     color: var(--tb-ink);
 }
 
-#datepicker .datepicker th.prev::before {
+html #datepicker .datepicker th.prev::before {
     content: "‹";
 }
 
-#datepicker .datepicker th.next::before {
+html #datepicker .datepicker th.next::before {
     content: "›";
 }
 
-#datepicker .datepicker td.day {
+html #datepicker .datepicker td.day {
     border-radius: 6px;
 }
 
-#datepicker .datepicker td.old,
-#datepicker .datepicker td.new {
-    color: #9ca3af;
+html #datepicker .datepicker td.old,
+html #datepicker .datepicker td.new {
+    color: var(--tb-faint);
 }
 
-#datepicker .datepicker-days .day.inrange {
-    color: #1d5f27;
+html #datepicker .datepicker-days .day.inrange {
+    color: var(--tb-green-ink);
     background: var(--tb-green-soft);
     border-radius: 0;
 }
 
-#datepicker .datepicker td.today {
+html #datepicker .datepicker td.today {
     background: none;
     box-shadow: inset 0 0 0 2px var(--tb-green);
 }
 
-#datepicker .datepicker table tr td.active,
-#datepicker .datepicker table tr td.active:hover {
+html #datepicker .datepicker table tr td.active,
+html #datepicker .datepicker table tr td.active:hover {
     color: #fff;
     text-shadow: none;
     background: var(--tb-green);
@@ -404,11 +484,11 @@ body {
 
 /* ---------- Day timelines ---------- */
 
-.timeEntry {
+html .timeEntry {
     margin-bottom: 20px;
 }
 
-.timeEntry-infoHeader {
+html .timeEntry-infoHeader {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
@@ -418,14 +498,14 @@ body {
     color: var(--tb-ink);
 }
 
-.timeEntry-totalHoursWorked {
+html .timeEntry-totalHoursWorked {
     float: none !important;
     font-size: 15px;
     font-weight: 500;
     color: var(--tb-muted);
 }
 
-.timesheet-day-indicator {
+html .timesheet-day-indicator {
     margin-left: 8px;
     padding: 2px 8px;
     font-size: 11px;
@@ -435,7 +515,7 @@ body {
     border-radius: 999px;
 }
 
-.timeEntry-entry {
+html .timeEntry-entry {
     display: flex;
     height: 28px;
     margin-top: 0;
@@ -444,11 +524,11 @@ body {
     border-radius: 6px;
 }
 
-.timeEntry-entry > div {
+html .timeEntry-entry > div {
     flex: none;
 }
 
-.timeEntry-capturedTime {
+html .timeEntry-capturedTime {
     box-sizing: border-box;
     padding-left: 4px;
     overflow: hidden;
@@ -458,29 +538,29 @@ body {
     box-shadow: inset -1px 0 rgba(255, 255, 255, 0.45);
 }
 
-.timeEntry-capturedTimeAction {
+html .timeEntry-capturedTimeAction {
     display: flex;
     align-items: center;
 }
 
 /* Quarter-hour ticks, stronger on the hour and at 8 hours */
-.timeEntry-quaterhour {
+html .timeEntry-quaterhour {
     background-image: linear-gradient(to left, rgba(255, 255, 255, 0.22) 1px, transparent 1px);
     background-size: 100% 35%;
     background-position: bottom right;
 }
 
-.timeEntry-quaterhour.timeEntry-hour {
+html .timeEntry-quaterhour.timeEntry-hour {
     background-image: linear-gradient(to left, rgba(255, 255, 255, 0.45) 1px, transparent 1px);
     background-size: 100% 55%;
 }
 
-.timeEntry-quaterhour.timeEntry-8-hour {
+html .timeEntry-quaterhour.timeEntry-8-hour {
     background-image: linear-gradient(to left, rgba(255, 255, 255, 0.9) 2px, transparent 2px);
     background-size: 100% 100%;
 }
 
-.timeEntry-arrow-up {
+html .timeEntry-arrow-up {
     border-bottom-color: var(--tb-panel);
 }
 
@@ -489,14 +569,14 @@ body {
  * "form" (entry form + templates) or "bulk" (Bulk Edit Day).
  */
 
-.timeEntry-container {
+html .timeEntry-container {
     margin-top: 2px;
     background-color: var(--tb-panel) !important;
-    border: 1px solid #dbe5f1;
+    border: 1px solid var(--tb-card-border);
     border-radius: 14px;
 }
 
-.timeEntry-container.tb-has-quick {
+html .timeEntry-container.tb-has-quick {
     display: grid !important;
     grid-template-columns: 280px minmax(0, 1fr) auto minmax(300px, 420px);
     align-items: stretch;
@@ -504,34 +584,34 @@ body {
     padding: 16px;
 }
 
-.timeEntry-container.tb-has-quick:not([data-tb-view="form"]) {
+html .timeEntry-container.tb-has-quick:not([data-tb-view="form"]) {
     grid-template-columns: 280px minmax(0, 1fr);
 }
 
-.tb-has-quick:not([data-tb-view="form"]) > .timeEntry-content,
-.tb-has-quick:not([data-tb-view="form"]) > .tb-or,
-.tb-has-quick:not([data-tb-view="form"]) > .tb-templates,
-.tb-has-quick:not([data-tb-view="bulk"]) > .tb-bulk {
+html .tb-has-quick:not([data-tb-view="form"]) > .timeEntry-content,
+html .tb-has-quick:not([data-tb-view="form"]) > .tb-or,
+html .tb-has-quick:not([data-tb-view="form"]) > .tb-templates,
+html .tb-has-quick:not([data-tb-view="bulk"]) > .tb-bulk {
     display: none;
 }
 
-.tb-quick,
-.tb-card,
-.timeEntry-container .timeEntry-content {
+html .tb-quick,
+html .tb-card,
+html .timeEntry-container .timeEntry-content {
     box-sizing: border-box;
     padding: 18px 20px;
     background: var(--tb-surface);
-    border: 1px solid #dbe5f1;
+    border: 1px solid var(--tb-card-border);
     border-radius: 12px;
     box-shadow: var(--tb-shadow);
 }
 
-.tb-quick-date {
+html .tb-quick-date {
     font-size: 19px;
     font-weight: 700;
 }
 
-.tb-quick-total {
+html .tb-quick-total {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -542,22 +622,22 @@ body {
     border-bottom: 1px solid var(--tb-line);
 }
 
-.tb-quick-heading {
+html .tb-quick-heading {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-bottom: 12px;
     font-size: 15px;
     font-weight: 700;
-    color: #374151;
+    color: var(--tb-ink-soft);
 }
 
-.tb-quick-heading .tb-icon {
+html .tb-quick-heading .tb-icon {
     color: var(--tb-blue);
     fill: currentColor;
 }
 
-.tb-action {
+html .tb-action {
     display: flex;
     align-items: center;
     gap: 14px;
@@ -572,55 +652,55 @@ body {
     transition: filter 120ms ease, box-shadow 120ms ease, transform 80ms ease;
 }
 
-.tb-action--bulk {
+html .tb-action--bulk {
     background: var(--tb-blue);
 }
 
-.tb-action:hover {
+html .tb-action:hover {
     filter: brightness(1.08);
 }
 
-.tb-action:active {
+html .tb-action:active {
     transform: scale(0.98);
 }
 
-.tb-action:focus-visible {
+html .tb-action:focus-visible {
     outline: none;
 }
 
-.tb-action--bulk[aria-pressed="true"],
-.tb-action--bulk:focus-visible {
-    box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--tb-blue);
+html .tb-action--bulk[aria-pressed="true"],
+html .tb-action--bulk:focus-visible {
+    box-shadow: 0 0 0 3px var(--tb-surface), 0 0 0 5px var(--tb-blue);
 }
 
-.tb-action-icon .tb-icon {
+html .tb-action-icon .tb-icon {
     width: 26px;
     height: 26px;
 }
 
-.tb-action-text {
+html .tb-action-text {
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
-.tb-action-text strong {
+html .tb-action-text strong {
     font-size: 15px;
 }
 
-.tb-action-text small {
+html .tb-action-text small {
     font-size: 12px;
     opacity: 0.9;
 }
 
-.tb-or {
+html .tb-or {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.tb-or::before {
+html .tb-or::before {
     content: "";
     position: absolute;
     top: 8px;
@@ -629,7 +709,7 @@ body {
     border-left: 1px solid var(--tb-line);
 }
 
-.tb-or span {
+html .tb-or span {
     position: relative;
     padding: 6px 4px;
     font-size: 12px;
@@ -639,7 +719,7 @@ body {
     border-radius: 999px;
 }
 
-.tb-card-title {
+html .tb-card-title {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -650,26 +730,26 @@ body {
     color: var(--tb-ink);
 }
 
-.tb-card-subtitle {
+html .tb-card-subtitle {
     margin: 4px 0 16px 30px;
     font-size: 13px;
     color: var(--tb-muted);
 }
 
-.tb-field-label {
+html .tb-field-label {
     margin: 14px 0 8px;
     font-size: 14px;
     font-weight: 700;
-    color: #374151;
+    color: var(--tb-ink-soft);
 }
 
-.tb-choices {
+html .tb-choices {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
 }
 
-.tb-choice {
+html .tb-choice {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -677,61 +757,61 @@ body {
     height: 38px;
     padding: 0 18px;
     font: 600 13px var(--tb-font);
-    color: #374151;
+    color: var(--tb-ink-soft);
     background: var(--tb-surface);
-    border: 1px solid #d5dce6;
+    border: 1px solid var(--tb-control-border);
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.tb-locations .tb-choice {
+html .tb-locations .tb-choice {
     min-width: 120px;
 }
 
-.tb-sentiments .tb-choice {
+html .tb-sentiments .tb-choice {
     width: 64px;
     padding: 0;
 }
 
-.tb-sentiments .tb-choice .tb-icon {
+html .tb-sentiments .tb-choice .tb-icon {
     width: 24px;
     height: 24px;
 }
 
-.tb-choice:hover {
-    background: #f1f5fb;
-    border-color: #b9c6d8;
+html .tb-choice:hover {
+    background: var(--tb-hover);
+    border-color: var(--tb-control-border-hover);
 }
 
-.tb-choice:focus-visible {
+html .tb-choice:focus-visible {
     outline: 2px solid var(--tb-blue);
     outline-offset: 2px;
 }
 
-.tb-locations .tb-choice[aria-pressed="true"] {
+html .tb-locations .tb-choice[aria-pressed="true"] {
     color: #fff;
     background: var(--tb-blue);
     border-color: var(--tb-blue);
 }
 
-.tb-sentiments .tb-choice[data-value="2"] { color: #1e8a4c; }
-.tb-sentiments .tb-choice[data-value="1"] { color: #d39a06; }
-.tb-sentiments .tb-choice[data-value="3"] { color: var(--tb-danger); }
+html .tb-sentiments .tb-choice[data-value="2"] { color: var(--tb-happy); }
+html .tb-sentiments .tb-choice[data-value="1"] { color: var(--tb-neutral); }
+html .tb-sentiments .tb-choice[data-value="3"] { color: var(--tb-sad); }
 
-.tb-sentiments .tb-choice[aria-pressed="true"] {
-    background: color-mix(in srgb, currentColor 12%, #fff);
+html .tb-sentiments .tb-choice[aria-pressed="true"] {
+    background: color-mix(in srgb, currentColor 12%, var(--tb-mix-base));
     border: 2px solid currentColor;
 }
 
-.tb-card-buttons {
+html .tb-card-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 22px;
 }
 
-.tb-button {
+html .tb-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -742,66 +822,66 @@ body {
     font: 700 14px var(--tb-font);
     color: var(--tb-ink);
     background: var(--tb-surface);
-    border: 1px solid #cfd8e3;
+    border: 1px solid var(--tb-control-border);
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 120ms ease, transform 80ms ease;
 }
 
-.tb-button:hover {
-    background: #f3f6fa;
+html .tb-button:hover {
+    background: var(--tb-hover);
 }
 
-.tb-button--primary {
+html .tb-button--primary {
     color: #fff;
     background: var(--tb-blue);
     border-color: var(--tb-blue);
 }
 
-.tb-button--primary:hover {
+html .tb-button--primary:hover {
     background: var(--tb-blue-dark);
 }
 
-.tb-button:active {
+html .tb-button:active {
     transform: scale(0.98);
 }
 
-.tb-button:focus-visible {
+html .tb-button:focus-visible {
     outline: 2px solid var(--tb-blue);
     outline-offset: 2px;
 }
 
-.tb-button:disabled {
+html .tb-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
 }
 
-.tb-status {
+html .tb-status {
     margin: 12px 0 0;
     font-size: 13px;
     color: var(--tb-muted);
 }
 
-.tb-status:empty {
+html .tb-status:empty {
     display: none;
 }
 
-.tb-status--ok {
+html .tb-status--ok {
     color: var(--tb-green);
 }
 
-.tb-status--error {
+html .tb-status--error {
     color: var(--tb-danger);
 }
 
 /* Templates */
-.tb-template-select:focus-visible {
+html .tb-template-select:focus-visible {
     outline: 2px solid var(--tb-blue);
     outline-offset: 2px;
 }
 
-.tb-template-select {
+html .tb-template-select {
     box-sizing: border-box;
     width: 100%;
     height: 42px;
@@ -810,22 +890,22 @@ body {
     font: 500 14px var(--tb-font);
     color: var(--tb-ink);
     background: var(--tb-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center / 16px;
-    border: 1px solid #cfd8e3;
+    border: 1px solid var(--tb-control-border);
     border-radius: 8px;
     appearance: none;
 }
 
-.tb-template-list {
+html .tb-template-list {
     max-height: 220px;
     margin: 0;
     padding: 4px;
     overflow-y: auto;
     list-style: none;
-    background: #f7f9fc;
+    background: var(--tb-subtle);
     border-radius: 8px;
 }
 
-.tb-template {
+html .tb-template {
     position: relative;
     display: flex;
     align-items: center;
@@ -835,36 +915,36 @@ body {
     cursor: pointer;
 }
 
-.tb-template + .tb-template {
+html .tb-template + .tb-template {
     margin-top: 2px;
 }
 
-.tb-template:hover {
-    background: #eef2f8;
+html .tb-template:hover {
+    background: var(--tb-hover);
 }
 
-.tb-template:focus-visible {
+html .tb-template:focus-visible {
     outline: 2px solid var(--tb-blue);
     outline-offset: -2px;
 }
 
-.tb-template[aria-selected="true"] {
-    background: color-mix(in srgb, var(--tb-blue) 10%, #fff);
+html .tb-template[aria-selected="true"] {
+    background: color-mix(in srgb, var(--tb-blue) 10%, var(--tb-mix-base));
     box-shadow: inset 3px 0 var(--tb-blue);
 }
 
-.tb-template-avatar {
+html .tb-template-avatar {
     flex: none;
     width: 36px;
     height: 36px;
     font: 700 14px/36px var(--tb-font);
     text-align: center;
     color: var(--tb-color);
-    background: color-mix(in srgb, var(--tb-color) 18%, #fff);
+    background: color-mix(in srgb, var(--tb-color) 18%, var(--tb-mix-base));
     border-radius: 8px;
 }
 
-.tb-template-text {
+html .tb-template-text {
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -872,146 +952,191 @@ body {
     min-width: 0;
 }
 
-.tb-template-text strong,
-.tb-template-text small {
+html .tb-template-text strong,
+html .tb-template-text small {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-.tb-template-text strong {
+html .tb-template-text strong {
     font-size: 13px;
     font-weight: 600;
 }
 
-.tb-template-text small {
+html .tb-template-text small {
     font-size: 12px;
     color: var(--tb-muted);
 }
 
 /* Manage Templates rows: no selection, explicit actions */
-.tb-manage .tb-template {
+html .tb-manage .tb-template {
     cursor: default;
 }
 
-.tb-manage .tb-template:hover {
+html .tb-manage .tb-template:hover {
     background: none;
 }
 
-.tb-template-actions {
+html .tb-template-actions {
     display: flex;
     flex: none;
     gap: 6px;
 }
 
-.tb-small-button {
+html .tb-small-button {
     height: 30px;
     padding: 0 12px;
     font: 600 12px var(--tb-font);
     color: var(--tb-ink);
     background: var(--tb-surface);
-    border: 1px solid #cfd8e3;
+    border: 1px solid var(--tb-control-border);
     border-radius: 6px;
     cursor: pointer;
 }
 
-.tb-small-button:hover {
-    background: #f1f5fb;
+html .tb-small-button:hover {
+    background: var(--tb-hover);
 }
 
-.tb-small-button:focus-visible {
+html .tb-small-button:focus-visible {
     outline: 2px solid var(--tb-blue);
     outline-offset: 1px;
 }
 
-.tb-small-button--danger {
+html .tb-small-button--danger {
     color: var(--tb-danger);
-    border-color: color-mix(in srgb, var(--tb-danger) 35%, #fff);
+    border-color: color-mix(in srgb, var(--tb-danger) 35%, var(--tb-mix-base));
 }
 
-.tb-small-button--danger:hover {
-    background: color-mix(in srgb, var(--tb-danger) 8%, #fff);
+html .tb-small-button--danger:hover {
+    background: color-mix(in srgb, var(--tb-danger) 8%, var(--tb-mix-base));
 }
 
-.tb-empty {
+html .tb-empty {
     margin: 0;
     padding: 16px;
     font-size: 13px;
     color: var(--tb-muted);
     text-align: center;
-    background: #f7f9fc;
+    background: var(--tb-subtle);
     border-radius: 8px;
 }
 
 /* ---------- The timesheet's own entry form, restyled as a card ---------- */
 
-.timeEntry-container .timeEntry-content {
+html .timeEntry-container .timeEntry-content {
     width: auto;
     margin: 0;
 }
 
-.timeEntry-container:not(.tb-has-quick) .timeEntry-content {
+html .timeEntry-container:not(.tb-has-quick) .timeEntry-content {
     margin: 16px;
 }
 
-.timeEntry-content-input-block {
+html .timeEntry-content-input-block {
     margin: 8px 16px 8px 0;
 }
 
-.timeEntry-banner {
+html .timeEntry-banner {
     padding: 8px 12px;
     font-weight: 600;
     border-radius: 8px;
 }
 
-.timeEntry-content .timeEntry-input {
+html .timeEntry-content .timeEntry-input {
     box-sizing: border-box;
     padding: 8px 10px;
     font: 14px var(--tb-font);
-    border: 1px solid #cfd8e3;
+    border: 1px solid var(--tb-control-border);
     border-radius: 8px !important;
     box-shadow: none;
 }
 
-.timeEntry-content textarea.timeEntry-input {
+html .timeEntry-content textarea.timeEntry-input {
     width: 420px;
 }
 
-.timeEntry-content .timeEntry-input.tiny {
+html .timeEntry-content .timeEntry-input.tiny {
     height: 34px;
 }
 
-.timeEntry-content .timeEntry-input:focus {
+html .timeEntry-content .timeEntry-input:focus {
     border-color: var(--tb-blue);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--tb-blue) 20%, transparent);
 }
 
-.timeEntry-content .btn.btn-flat {
+html .timeEntry-content .btn.btn-flat {
     min-width: 96px;
     height: 38px;
     font-weight: 700;
     border-radius: 8px;
 }
 
-.timeEntry-content .btn.btn-primary.save {
+html .timeEntry-content .btn.btn-primary.save {
     background: var(--tb-blue);
 }
 
-.timeEntry-content .btn.btn-flat.cancel {
-    border: 1px solid #cfd8e3;
+html .timeEntry-content .btn.btn-flat.cancel {
+    border: 1px solid var(--tb-control-border);
 }
 
-.timeEntry-content .textcheckbox {
+html .timeEntry-content .textcheckbox {
     padding-right: 12px;
     overflow: hidden;
     border-radius: 8px;
 }
 
-.timeEntry-content .sentiment-button {
+/* Sentiment: the timesheet's dark PNG faces are replaced with outline faces in the theme's colors */
+html .timeEntry-content .sentiment-button {
+    position: relative;
+    width: 40px;
+    height: 36px;
+    margin: 0 6px 0 0;
+    vertical-align: top;
+    background-image: none;
+    background-color: var(--tb-surface);
+    border: 1px solid var(--tb-control-border);
     border-radius: 8px;
 }
 
-.timeEntry-radio-group {
+html .timeEntry-content .sentiment-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 22px;
+    height: 22px;
+    margin: auto;
+    background-color: currentColor;
+    -webkit-mask: var(--tb-face) center / contain no-repeat;
+    mask: var(--tb-face) center / contain no-repeat;
+}
+
+html .timeEntry-content .sentiment-button:hover {
+    background-color: var(--tb-hover);
+}
+
+html .timeEntry-content .sentiment-happy {
+    color: var(--tb-happy);
+    --tb-face: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M9 9.5h.01M15 9.5h.01' stroke-width='3'/%3E%3Cpath d='M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5'/%3E%3C/svg%3E");
+}
+
+html .timeEntry-content .sentiment-neutral {
+    color: var(--tb-neutral);
+    --tb-face: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M9 9.5h.01M15 9.5h.01' stroke-width='3'/%3E%3Cpath d='M8.5 15h7'/%3E%3C/svg%3E");
+}
+
+html .timeEntry-content .sentiment-sad {
+    color: var(--tb-sad);
+    --tb-face: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M9 9.5h.01M15 9.5h.01' stroke-width='3'/%3E%3Cpath d='M8 16.5s1.5-2.5 4-2.5 4 2.5 4 2.5'/%3E%3C/svg%3E");
+}
+
+html .timeEntry-content .sentiment-button.active {
+    background-color: color-mix(in srgb, currentColor 14%, var(--tb-surface));
+    border: 2px solid currentColor;
+}
+
+html .timeEntry-radio-group {
     margin-right: 8px;
     padding: 0 14px 0 10px;
     font-weight: 600;
@@ -1019,7 +1144,7 @@ body {
     border-radius: 8px;
 }
 
-.tb-save-template {
+html .tb-save-template {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1029,7 +1154,7 @@ body {
     border-top: 1px solid var(--tb-line);
 }
 
-.tb-check {
+html .tb-check {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1039,42 +1164,147 @@ body {
     cursor: pointer;
 }
 
-.tb-check input {
+html .tb-check input {
     width: 18px;
     height: 18px;
     margin: 0;
     accent-color: var(--tb-purple);
 }
 
-.tb-save-template-name[type="text"] {
+html .tb-save-template-name[type="text"] {
     box-sizing: border-box;
     width: 280px;
     height: 36px;
     margin: 0;
     padding: 0 10px;
     font: 14px var(--tb-font);
-    border: 1px solid #cfd8e3;
+    border: 1px solid var(--tb-control-border);
     border-radius: 8px;
 }
 
-.tb-save-template-name[hidden] {
+html .tb-save-template-name[hidden] {
     display: none;
 }
 
 @media (max-width: 1300px) {
-    .timeEntry-container.tb-has-quick,
-    .timeEntry-container.tb-has-quick:not([data-tb-view="form"]) {
+    html .timeEntry-container.tb-has-quick,
+    html .timeEntry-container.tb-has-quick:not([data-tb-view="form"]) {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .tb-or::before {
+    html .tb-or::before {
         display: none;
     }
 }
 
+/* ---------- Dark mode (html.tb-dark, toggled from the header and saved by theme.js) ---------- */
+
+html.tb-dark {
+    color-scheme: dark;
+    --tb-ink: #e2e8f0;
+    --tb-ink-soft: #cbd5e1;
+    --tb-muted: #94a3b8;
+    --tb-faint: #64748b;
+    --tb-line: #243552;
+    --tb-page: #0b1220;
+    --tb-surface: #121d31;
+    --tb-subtle: #0f192b;
+    --tb-hover: #1a2942;
+    --tb-panel: #0e1828;
+    --tb-card-border: #22324d;
+    --tb-control-border: #2c3f5f;
+    --tb-control-border-hover: #3d5580;
+    --tb-track: #213b63;
+    --tb-happy: #4ade80;
+    --tb-neutral: #fbbf24;
+    --tb-sad: #f87171;
+    --tb-blue: #3b82f6;
+    --tb-blue-dark: #2563eb;
+    --tb-purple: #7c5ce0;
+    --tb-green: #3fa654;
+    --tb-green-soft: #163626;
+    --tb-green-ink: #9fdcaa;
+    --tb-danger: #f87171;
+    --tb-mix-base: #121d31;
+    --tb-chip-ink-base: #ffffff;
+    --tb-toast: #1e3a8a;
+    --tb-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+html.tb-dark body,
+html.tb-dark .container-fluid {
+    color: var(--tb-ink);
+    background: var(--tb-page);
+}
+
+/* The timesheet's own controls inside the entry form */
+html.tb-dark .timeEntry-content .timeEntry-input,
+html.tb-dark .tb-save-template-name[type="text"] {
+    color: var(--tb-ink);
+    background: var(--tb-subtle);
+    border-color: var(--tb-control-border);
+}
+
+html.tb-dark .timeEntry-content-label,
+html.tb-dark .timeEntry-label,
+html.tb-dark .char-counter {
+    color: var(--tb-ink-soft);
+}
+
+html.tb-dark .timeEntry-content .btn.btn-flat.cancel {
+    color: var(--tb-ink);
+    background: var(--tb-surface);
+    border-color: var(--tb-control-border);
+    text-shadow: none;
+}
+
+html.tb-dark .timeEntry-tooltip {
+    color: var(--tb-ink);
+    background: var(--tb-surface);
+    border-color: var(--tb-card-border);
+}
+
+html.tb-dark .timesheet-section .dropdown-menu {
+    background: var(--tb-surface);
+    border-color: var(--tb-card-border);
+}
+
+html.tb-dark .timesheet-section .dropdown-menu a {
+    color: var(--tb-ink);
+}
+
+html.tb-dark .timesheet-section .dropdown-menu a:hover,
+html.tb-dark .timesheet-section .dropdown-menu a:focus {
+    color: var(--tb-ink);
+    background: var(--tb-hover);
+}
+
+html.tb-dark .timesheet-section .dropdown-toggle .icon-chevron-down {
+    filter: invert(1);
+}
+
+html.tb-dark #datepicker .datepicker table tr td.day:hover,
+html.tb-dark #datepicker .datepicker th.prev:hover,
+html.tb-dark #datepicker .datepicker th.next:hover,
+html.tb-dark #datepicker .datepicker .datepicker-switch:hover {
+    background: var(--tb-hover);
+}
+
+/* Pin and fill buttons (violations.css) */
+html.tb-dark .color-picker,
+html.tb-dark .pin {
+    background-color: var(--tb-surface);
+    border-color: var(--tb-surface);
+}
+
+html.tb-dark .color-picker:not(.is-open) img,
+html.tb-dark .pin:not(.is-pinned) img {
+    filter: invert(1);
+}
+
 /* ---------- Toast ---------- */
 
-.tb-toast {
+html .tb-toast {
     position: fixed;
     right: 24px;
     bottom: 24px;
@@ -1083,28 +1313,30 @@ body {
     padding: 12px 16px;
     font: 600 14px var(--tb-font);
     color: #fff;
-    background: var(--tb-ink);
+    background: var(--tb-toast);
     border-radius: 10px;
     box-shadow: 0 8px 24px rgba(16, 24, 40, 0.25);
     transition: opacity 400ms ease, transform 400ms ease;
 }
 
-.tb-toast--error {
+html .tb-toast--error {
     background: var(--tb-danger);
 }
 
-.tb-toast--leaving {
+html .tb-toast--leaving {
     opacity: 0;
     transform: translateY(8px);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .tb-toast,
-    .tb-action,
-    .tb-button,
-    .tb-header-button,
-    .tb-choice,
-    .timesheet-section .timesheetlistitem {
+    html .tb-toast,
+    html .tb-action,
+    html .tb-button,
+    html .tb-header-button,
+    html .tb-switch,
+    html .tb-switch::after,
+    html .tb-choice,
+    html .timesheet-section .timesheetlistitem {
         transition: none;
     }
 }

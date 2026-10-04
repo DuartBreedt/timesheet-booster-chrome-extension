@@ -32,7 +32,11 @@
                 "content-scripts/classic.min.css",
                 "content-scripts/redesign.css"
             ],
-            "js": []
+            "js": [
+                "constants.js",
+                "content-scripts/theme.js"
+            ],
+            "run_at": "document_start"
         }
     ],
     "web_accessible_resources": [

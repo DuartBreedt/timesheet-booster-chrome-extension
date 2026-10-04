@@ -437,8 +437,35 @@
                 'aria-haspopup': 'dialog',
                 html: `${tbIcon('template')}<span>Manage Templates</span>`,
                 onclick: openManageDialog
-            })
+            }),
+            buildThemeToggle()
         ]))
+    }
+
+    // theme.js applies the saved choice on load; this only flips and saves it
+    function buildThemeToggle() {
+        const toggle = el('button', {
+            type: 'button',
+            class: 'tb-theme-toggle',
+            role: 'switch',
+            onclick: () => {
+                const dark = !document.documentElement.classList.contains('tb-dark')
+                document.documentElement.classList.toggle('tb-dark', dark)
+                chrome.storage.sync.set({ [STORAGE_KEY_DARK_MODE]: dark })
+                sync()
+            }
+        })
+
+        function sync() {
+            const dark = document.documentElement.classList.contains('tb-dark')
+            toggle.setAttribute('aria-checked', String(dark))
+            toggle.innerHTML = `${tbIcon(dark ? 'sun' : 'moon')}<span>Dark mode</span><span class="tb-switch" aria-hidden="true"></span>`
+        }
+
+        // Also follows changes made in another tab
+        new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+        sync()
+        return toggle
     }
 
     function openManageDialog() {
