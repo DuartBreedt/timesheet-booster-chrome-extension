@@ -1,7 +1,6 @@
 STORAGE_KEY_PROJECTS = 'projects'
 STORAGE_KEY_TEMPLATES = 'templates'
 STORAGE_KEY_DARK_MODE = 'darkMode'
-STORAGE_KEY_DEFAULT_LOCATION = 'defaultLocation'
 STORAGE_KEY_REMINDER_ENABLED = 'dailyReminderOn'
 STORAGE_KEY_REMINDER_TIME = 'reminderTime'
 // today's captured hours as last seen on timesheets, so the reminder can skip days that are done

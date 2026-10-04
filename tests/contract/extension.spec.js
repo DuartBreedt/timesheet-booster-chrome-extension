@@ -85,8 +85,6 @@ test.describe('extension on the live timesheets', () => {
         await expect(container.locator('.tb-save-template-toggle')).toBeVisible()
         await expect(container.locator('.tb-form-buttons .save')).toBeVisible()
         await expect(container.locator('.tb-form-buttons .cancel')).toBeVisible()
-        // the default office is Home until changed in Settings
-        await expect(container.locator('.timeEntry-radio-group input[value="2"]')).toBeChecked()
 
         await container.locator('.tb-form-buttons .cancel').click()
         await expect(page.locator('.timeEntry-container')).toHaveCount(0)

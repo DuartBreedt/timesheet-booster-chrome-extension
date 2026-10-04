@@ -72,7 +72,7 @@ Reload the extension and confirm, on the live timesheets:
 - [ ] The time field drags in 15 minute steps.
 - [ ] No errors in the page console or on the extension's error page.
 - [ ] Granting site access makes the extension start working without a reinstall.
-- [ ] Settings (dark mode, colours, pins, default office) persist across restarts.
+- [ ] Settings (dark mode, colours, pins, feature toggles, reminder) persist across restarts.
 
 ### Distribution
 

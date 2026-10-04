@@ -16,3 +16,13 @@ chrome.storage.onChanged.addListener((changes, area) => {
         if (changes[key]) document.documentElement.classList.toggle(className, changes[key].newValue === false)
     })
 })
+
+// a week either side of christmas by the computer's date, not the week being viewed
+function isFestiveSeason(now) {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const christmasYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    const daysFromChristmas = Math.round((today - new Date(christmasYear, 11, 25)) / 86400000)
+    return Math.abs(daysFromChristmas) <= 7
+}
+
+document.documentElement.classList.toggle('tb-festive', isFestiveSeason(new Date()))

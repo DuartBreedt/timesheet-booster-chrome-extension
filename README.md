@@ -71,12 +71,6 @@ It is off by default. The time can be changed in the same place. **Send a test**
 
 **Quick Actions** and **Templates** can each be switched off under **Settings**, and the entry form closes up the space they used. Both are on by default, and the choice is remembered.
 
-### Default office
-
-Set under **Settings** in the header. It is preselected under "Worked From" on new entries.
-
-![Settings](docs/screenshots/settings.png)
-
 
 ## Installing on Chromium browsers
 

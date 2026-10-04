@@ -27,9 +27,6 @@
     const VIEW_COPY = 'copy';
 
     let templates = [];
-    // home until changed in settings
-    const DEFAULT_LOCATION_ID = 2;
-    let defaultLocationId = DEFAULT_LOCATION_ID;
     let reminder = { enabled: false, time: DEFAULT_REMINDER_TIME };
 
     onDataLoaded.push(() => {
@@ -187,7 +184,6 @@
         const content = container.querySelector('.timeEntry-content')
         if (container.dataset.tbMode === 'new') {
             if (content) content.append(buildSaveTemplateRow())
-            applyDefaultLocation(container)
         }
         if (content) groupFormButtons(content)
         makeTimeScrubbable(container)
@@ -319,12 +315,6 @@
             save.closest('.timeEntry-content-buttons'),
             cancel.closest('.timeEntry-content-buttons')
         ]))
-    }
-
-    // select it like a user would so the form's bindings pick it up
-    function applyDefaultLocation(container) {
-        const radio = container.querySelector(`input[type="radio"][value="${defaultLocationId}"]`)
-        if (radio && !radio.checked) radio.click()
     }
 
     function buildActionButton(view, className, icon, title, subtitle, onSelect) {
@@ -903,17 +893,13 @@
     }
 
     function loadSettings() {
-        chrome.storage.sync.get([STORAGE_KEY_DEFAULT_LOCATION, STORAGE_KEY_REMINDER_ENABLED, STORAGE_KEY_REMINDER_TIME], (stored) => {
-            defaultLocationId = Number(stored[STORAGE_KEY_DEFAULT_LOCATION]) || DEFAULT_LOCATION_ID
+        chrome.storage.sync.get([STORAGE_KEY_REMINDER_ENABLED, STORAGE_KEY_REMINDER_TIME], (stored) => {
             reminder = {
                 enabled: stored[STORAGE_KEY_REMINDER_ENABLED] === true,
                 time: stored[STORAGE_KEY_REMINDER_TIME] || DEFAULT_REMINDER_TIME
             }
         })
         chrome.storage.onChanged.addListener((changes, area) => {
-            if (area === 'sync' && changes[STORAGE_KEY_DEFAULT_LOCATION]) {
-                defaultLocationId = Number(changes[STORAGE_KEY_DEFAULT_LOCATION].newValue) || DEFAULT_LOCATION_ID
-            }
             if (area === 'sync' && changes[STORAGE_KEY_REMINDER_ENABLED]) {
                 reminder.enabled = changes[STORAGE_KEY_REMINDER_ENABLED].newValue === true
             }
@@ -924,20 +910,6 @@
     }
 
     function renderSettingsCard(card) {
-        const buttons = LOCATIONS.map((option) => el('button', {
-            type: 'button',
-            class: 'tb-choice',
-            role: 'radio',
-            'aria-checked': String(option.id === defaultLocationId),
-            'data-value': String(option.id),
-            html: tbIcon(option.icon),
-            onclick: () => {
-                defaultLocationId = option.id
-                chrome.storage.sync.set({ [STORAGE_KEY_DEFAULT_LOCATION]: option.id })
-                buttons.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.value === String(option.id))))
-            }
-        }, [el('span', { text: option.name })]))
-
         card.replaceChildren(
             el('h3', { class: 'tb-card-title', html: `${tbIcon('settings')}<span>Settings</span>` }),
             el('div', { class: 'tb-field-label', text: 'Features' }),
@@ -945,8 +917,6 @@
                 buildFeatureToggle(STORAGE_KEY_QUICK_ACTIONS_ENABLED, 'bolt', 'Quick Actions'),
                 buildFeatureToggle(STORAGE_KEY_TEMPLATES_ENABLED, 'template', 'Templates')
             ]),
-            el('div', { class: 'tb-field-label', text: 'Default office' }),
-            el('div', { class: 'tb-choices tb-locations', role: 'radiogroup', 'aria-label': 'Default office' }, buttons),
             ...buildReminderSettings(),
             el('div', { class: 'tb-card-buttons' }, [
                 el('button', { type: 'button', class: 'tb-button', text: 'Done', onclick: card.tbClose })

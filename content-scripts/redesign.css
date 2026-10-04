@@ -253,14 +253,6 @@ html .tb-dialog::backdrop {
     background: rgba(15, 23, 42, 0.45);
 }
 
-html .tb-settings .tb-choices {
-    margin-bottom: 4px;
-}
-
-html .tb-settings .tb-locations {
-    margin-bottom: 18px;
-}
-
 html .tb-reminder {
     display: flex;
     flex-wrap: wrap;
@@ -895,8 +887,7 @@ html .tb-choice:focus-visible {
     outline-offset: 2px;
 }
 
-html .tb-locations .tb-choice[aria-pressed="true"],
-html .tb-locations .tb-choice[aria-checked="true"] {
+html .tb-locations .tb-choice[aria-pressed="true"] {
     color: var(--tb-on-accent);
     background: var(--tb-blue);
     border-color: var(--tb-blue);
@@ -2309,6 +2300,113 @@ html.tb-dark .tb-celebration--birthday .tb-capture-label {
     border-color: transparent;
 }
 
+/* Christmas season: a week either side of the 25th, see isFestiveSeason in theme.js */
+
+:root {
+    --tb-snow: rgba(110, 150, 205, 0.4);
+    --tb-festive-red: #b8323a;
+}
+
+html.tb-dark {
+    --tb-snow: rgba(255, 255, 255, 0.5);
+}
+
+/* falls behind the cards so it never sits over text; the page wrapper is see-through so it shows between them */
+html.tb-festive .container-fluid {
+    background: transparent !important;
+}
+
+html.tb-festive body::before,
+html.tb-festive body::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+
+html.tb-festive body::before {
+    top: -420px;
+    height: calc(100vh + 420px);
+    background-image:
+        radial-gradient(circle, var(--tb-snow) 0 1.6px, transparent 2.2px),
+        radial-gradient(circle, var(--tb-snow) 0 1.2px, transparent 1.8px),
+        radial-gradient(circle, var(--tb-snow) 0 2px, transparent 2.6px),
+        radial-gradient(circle, var(--tb-snow) 0 1.4px, transparent 2px),
+        radial-gradient(circle, var(--tb-snow) 0 1.1px, transparent 1.7px),
+        radial-gradient(circle, var(--tb-snow) 0 1.8px, transparent 2.4px),
+        radial-gradient(circle, var(--tb-snow) 0 1.3px, transparent 1.9px);
+    background-size: 420px 420px;
+    background-position: 23px 41px, 157px 112px, 301px 19px, 88px 233px, 239px 301px, 366px 187px, 194px 389px;
+    animation: tb-snow-near 30s linear infinite, tb-snow-sway 7s ease-in-out infinite alternate;
+}
+
+html.tb-festive body::after {
+    top: -560px;
+    height: calc(100vh + 560px);
+    opacity: 0.7;
+    background-image:
+        radial-gradient(circle, var(--tb-snow) 0 2.6px, transparent 3.2px),
+        radial-gradient(circle, var(--tb-snow) 0 1.8px, transparent 2.4px),
+        radial-gradient(circle, var(--tb-snow) 0 2.2px, transparent 2.8px),
+        radial-gradient(circle, var(--tb-snow) 0 2px, transparent 2.6px),
+        radial-gradient(circle, var(--tb-snow) 0 2.4px, transparent 3px);
+    background-size: 560px 560px;
+    background-position: 71px 57px, 409px 139px, 233px 271px, 517px 433px, 129px 487px;
+    animation: tb-snow-far 52s linear infinite, tb-snow-sway 11s ease-in-out -4s infinite alternate;
+}
+
+/* each layer falls exactly one tile, so the loop is seamless; sway uses translate so it doesn't fight the fall */
+@keyframes tb-snow-near {
+    to {
+        transform: translateY(420px);
+    }
+}
+
+@keyframes tb-snow-far {
+    to {
+        transform: translateY(560px);
+    }
+}
+
+@keyframes tb-snow-sway {
+    from {
+        translate: -14px 0;
+    }
+    to {
+        translate: 14px 0;
+    }
+}
+
+html.tb-festive .tb-title {
+    position: relative;
+}
+
+html.tb-festive .tb-title::before {
+    content: "";
+    position: absolute;
+    top: -15px;
+    left: -7px;
+    width: 30px;
+    height: 26px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 28'%3E%3Cpath d='M5 20C8 9 16 3 26 6c-4 3-5 8-3 14z' fill='%23c8333a'/%3E%3Cpath d='M9 17c3-6 8-10 14-10' fill='none' stroke='%23a3242b' stroke-width='1.5' stroke-linecap='round' opacity='.6'/%3E%3Crect x='3' y='18.5' width='22' height='6.5' rx='3.25' fill='%23fff' stroke='%23d8dde5'/%3E%3Ccircle cx='26.5' cy='6' r='3.6' fill='%23fff' stroke='%23d8dde5'/%3E%3C/svg%3E") center / contain no-repeat;
+    transform: rotate(-18deg);
+    pointer-events: none;
+}
+
+html.tb-festive .tb-title::after {
+    content: "Happy holidays";
+    padding: 3px 11px 3px 26px;
+    font: 700 11.5px/16px var(--tb-font);
+    letter-spacing: 0.03em;
+    text-transform: none;
+    color: #ffffff;
+    background: var(--tb-festive-red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10'/%3E%3Cpath d='M9 4l3 2.5L15 4M9 20l3-2.5 3 2.5M4.2 10.6l3.7-.8-1.2-3.6M19.8 13.4l-3.7.8 1.2 3.6M4.2 13.4l3.7.8-1.2 3.6M19.8 10.6l-3.7-.8 1.2-3.6'/%3E%3C/svg%3E") 9px center / 12px no-repeat;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 2px 6px color-mix(in srgb, var(--tb-festive-red) 30%, transparent);
+}
+
 /* Locks the page while a quick action runs; the visuals fade in late so quick actions don't flash */
 
 html .tb-busy {
@@ -2642,6 +2740,12 @@ html.tb-dark .tb-celebration--day .tb-capture-label {
     html .timeEntry-capturedTime[data-tb-special="birthday"],
     html .timeEntry-capturedTime[data-tb-special="birthday"]:hover::before {
         animation: none;
+    }
+
+    /* still flakes would just look like specks */
+    html.tb-festive body::before,
+    html.tb-festive body::after {
+        display: none;
     }
 
     html .tb-spinner {

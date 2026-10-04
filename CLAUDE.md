@@ -11,7 +11,7 @@ Constraints:
 
 - Manifest V3, plain JavaScript (classic scripts sharing globals) and CSS. No build step, no dependencies.
 - The page runs jQuery, Knockout, Bootstrap 2 and Tooltipster. Use them only from the MAIN world bridge scripts.
-- `chrome.storage.sync` for small settings (colours, pins, dark mode, default office). `chrome.storage.local` for templates, which can exceed sync's per-item quota.
+- `chrome.storage.sync` for small settings (colours, pins, dark mode, feature toggles, reminder). `chrome.storage.local` for templates, which can exceed sync's per-item quota.
 
 Do not use: frameworks (React, Vue, etc.), npm packages or bundlers, TypeScript, ES modules, CDNs or any remotely loaded code, jQuery in isolated-world scripts.
 

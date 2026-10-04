@@ -13,6 +13,8 @@
     const BIRTHDAY_CONFETTI_COUNT = 44;
     // muted warm and cool accents from the palette, so the confetti sits with the rest of the page
     const CONFETTI_COLORS = ['#eca65e', '#7cb677', '#7e95c8', '#c57791', '#cab072', '#72adb9'];
+    // red, green and gold while theme.js has the christmas season on
+    const FESTIVE_CONFETTI_COLORS = ['#c94a4a', '#2f8a57', '#d9a93f', '#e07a6a', '#7cb677', '#b8323a'];
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     document.addEventListener('tb:entry-captured', onEntryCaptured)
@@ -103,6 +105,7 @@
             layer.append(ray)
         }
 
+        const colors = document.documentElement.classList.contains('tb-festive') ? FESTIVE_CONFETTI_COLORS : CONFETTI_COLORS
         const count = { entry: CONFETTI_COUNT, day: FULL_DAY_CONFETTI_COUNT, birthday: BIRTHDAY_CONFETTI_COUNT }[variant]
         const spread = { entry: 46, day: 90, birthday: 160 }[variant]
         // a birthday bursts all the way round, the rest fan upwards
@@ -116,7 +119,7 @@
             piece.style.setProperty('--tb-dy', `${Math.sin(angle) * distance}px`)
             piece.style.setProperty('--tb-spin', `${(Math.random() - 0.5) * 720}deg`)
             piece.style.setProperty('--tb-delay', `${Math.round(Math.random() * 90)}ms`)
-            piece.style.setProperty('--tb-confetti-color', i === 0 ? color : CONFETTI_COLORS[i % CONFETTI_COLORS.length])
+            piece.style.setProperty('--tb-confetti-color', i === 0 ? color : colors[i % colors.length])
             layer.append(piece)
         }
 
