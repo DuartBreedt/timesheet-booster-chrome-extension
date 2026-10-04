@@ -53,6 +53,7 @@
             ],
             "js": [
                 "content-scripts/entry-metadata-bridge.js",
+                "content-scripts/category-overflow-bridge.js",
                 "content-scripts/day-actions-bridge.js"
             ],
             "run_at": "document_idle",

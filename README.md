@@ -22,6 +22,8 @@ Set a colour for any project or category from the fill button on its chip. Categ
 
 Pinned categories are listed first. Pins and colours are stored in Chrome sync storage.
 
+Categories in the **Other** dropdown can be pinned too, from the pin on each item. A pinned one moves out of the dropdown to the front of the row, and the rightmost unpinned category takes its place in the dropdown. Unpinning puts both back.
+
 ![Pinned categories](docs/screenshots/pinning.png)
 
 ### Stats

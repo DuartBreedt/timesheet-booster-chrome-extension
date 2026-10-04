@@ -384,6 +384,41 @@ html .timesheet-section .dropdown-menu a {
     font-size: 13px;
 }
 
+html .timesheet-section .dropdown-menu li a:has(.pin) {
+    position: relative;
+    padding-right: 36px;
+}
+
+html .timesheet-section .dropdown-menu .pin {
+    top: 50%;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    margin-top: -11px;
+    background-color: transparent;
+    border-color: transparent;
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity 120ms ease, background-color 120ms ease;
+}
+
+html .timesheet-section .dropdown-menu a:hover .pin,
+html .timesheet-section .dropdown-menu a:focus .pin,
+html .timesheet-section .dropdown-menu .pin:focus-visible {
+    opacity: 1;
+}
+
+/* the hovered row is filled with timesheets' accent and white text, so the pin follows the text */
+html .timesheet-section .dropdown-menu a:hover .pin img,
+html .timesheet-section .dropdown-menu a:focus .pin img {
+    filter: brightness(0) invert(1);
+    opacity: 0.85;
+}
+
+html .timesheet-section .dropdown-menu .pin:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+}
+
 html .timesheet-section .timesheetlistitem .color-picker,
 html .timesheet-section .timesheetlistitem .pin {
     width: 20px;
