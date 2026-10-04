@@ -5,8 +5,13 @@
     "manifest_version": 3,
     "minimum_chrome_version": "111",
     "permissions": [
-        "storage"
+        "storage",
+        "alarms",
+        "notifications"
     ],
+    "background": {
+        "service_worker": "background.js"
+    },
     "icons": {
         "16": "/images/ic_icon.png",
         "32": "/images/ic_icon.png",

@@ -108,7 +108,22 @@
     async function refresh() {
         if (!panel) return;
         const result = await sendBridgeCommand({ type: 'getStats' })
-        if (result.ok) render(summarise(result.days))
+        if (!result.ok) return;
+        render(summarise(result.days))
+        recordToday(result.days)
+    }
+
+    // read by the reminder in background.js, which can't see timesheets itself
+    function recordToday(days) {
+        const today = days.find((day) => day.date === todayKey())
+        if (!today) return;
+        chrome.storage.local.set({
+            [STORAGE_KEY_TODAY_HOURS]: {
+                date: today.date,
+                hours: today.entries.reduce((sum, e) => sum + e.hours, 0),
+                isHoliday: today.isHoliday
+            }
+        })
     }
 
     function summarise(days) {

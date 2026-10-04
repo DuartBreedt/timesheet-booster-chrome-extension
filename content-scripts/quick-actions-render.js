@@ -30,6 +30,7 @@
     // home until changed in settings
     const DEFAULT_LOCATION_ID = 2;
     let defaultLocationId = DEFAULT_LOCATION_ID;
+    let reminder = { enabled: false, time: DEFAULT_REMINDER_TIME };
 
     onDataLoaded.push(() => {
         loadTemplates()
@@ -42,6 +43,11 @@
             if (area === 'local' && changes[STORAGE_KEY_TEMPLATES]) {
                 templates = changes[STORAGE_KEY_TEMPLATES].newValue || []
                 renderAllTemplateCards()
+            }
+            // bulk, move and copy are only reachable from quick actions, so an open one would be stranded
+            if (area === 'sync' && changes[STORAGE_KEY_QUICK_ACTIONS_ENABLED] && changes[STORAGE_KEY_QUICK_ACTIONS_ENABLED].newValue === false) {
+                document.querySelectorAll(`.timeEntry-container.tb-has-quick:not([data-tb-view="${VIEW_FORM}"])`)
+                    .forEach((container) => setView(container, VIEW_FORM))
             }
         })
     })
@@ -67,11 +73,11 @@
         return minutes ? `${whole}h ${String(minutes).padStart(2, '0')}m` : `${whole}h`
     }
 
-    function toast(message, isError) {
+    function toast(message, isError, duration = 3500) {
         const node = el('div', { class: `tb-toast${isError ? ' tb-toast--error' : ''}`, role: 'status', text: message })
         document.body.append(node)
-        setTimeout(() => node.classList.add('tb-toast--leaving'), 3500)
-        setTimeout(() => node.remove(), 4000)
+        setTimeout(() => node.classList.add('tb-toast--leaving'), duration)
+        setTimeout(() => node.remove(), duration + 500)
     }
 
     // local not sync: descriptions can push templates past sync's 8kb per-item quota
@@ -188,10 +194,16 @@
         if (container.dataset.tbMode === 'new') revealEntryActionsOnDescription(container, quick, showForm)
     }
 
-    // Time field: drag right/up for +15 minutes, left/down for -15 (arrow keys too). A plain click still
+    // Time field: drag or scroll right/up for +15 minutes, left/down for -15 (arrow keys too). A plain click still
     // edits the text. Changes fire "change" so the form's knockout binding picks them up as if typed.
     const TIME_STEP_MINUTES = 15
     const TIME_STEP_PIXELS = 10
+    // trackpad scroll distance per step; a mouse wheel click is always one step
+    const TIME_WHEEL_PIXELS = 40
+    // a page that was scrolling this recently keeps scrolling when the cursor passes over the field
+    const TIME_WHEEL_SCROLL_GRACE_MS = 300
+    let lastPageScroll = 0
+    window.addEventListener('scroll', () => { lastPageScroll = Date.now() }, { capture: true, passive: true })
     const TIME_MIN_MINUTES = 15
     const TIME_MAX_MINUTES = 23 * 60 + 45
 
@@ -217,7 +229,7 @@
         const input = container.querySelector('.timeEntry-content-time input')
         if (!input || input.classList.contains('tb-time-scrub')) return;
         input.classList.add('tb-time-scrub')
-        input.title = 'Drag left/right or up/down to change by 15 minutes (arrow keys work too), or click to type'
+        input.title = 'Drag, scroll or use the arrow keys to change by 15 minutes, or click to type'
 
         let drag // { x, y, minutes, steps, moved }
 
@@ -265,6 +277,22 @@
             e.preventDefault()
             setTime(input, snapToStep(parseTime(input.value)) + direction * TIME_STEP_MINUTES)
         })
+
+        let wheelDistance = 0
+        input.addEventListener('wheel', (e) => {
+            // ctrl is how trackpad pinch-zoom arrives
+            if (e.ctrlKey || Date.now() - lastPageScroll < TIME_WHEEL_SCROLL_GRACE_MS) return;
+            e.preventDefault()
+
+            // Up and right increase, like dragging
+            const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : -e.deltaX
+            const isWheelClick = e.deltaMode !== WheelEvent.DOM_DELTA_PIXEL || Math.abs(delta) >= TIME_WHEEL_PIXELS
+            wheelDistance = isWheelClick ? delta : wheelDistance + delta
+            if (Math.abs(wheelDistance) < TIME_WHEEL_PIXELS && !isWheelClick) return;
+
+            setTime(input, snapToStep(parseTime(input.value)) - Math.sign(wheelDistance) * TIME_STEP_MINUTES)
+            wheelDistance = 0
+        }, { passive: false })
     }
 
     // An unsaved entry can only be moved or copied once there is something to move: wait for a description
@@ -516,7 +544,7 @@
             row('Worked from', 'Office for every entry', locations.group, officeButton),
             row('Sentiment', 'Sentiment for every entry', sentiments.group, sentimentButton),
             row('Move entries', 'Captured on the wrong day?', dateInput, moveButton),
-            row('Delete entries', 'Cannot be undone', el('span', { class: 'tb-bulk-row-note', text: 'Removes every entry on this day.' }), deleteButton),
+            row('Delete entries', 'Removes every entry on this day.', el('span'), deleteButton),
             el('div', { class: 'tb-card-buttons' }, [
                 el('button', { type: 'button', class: 'tb-button', text: 'Close', onclick: close })
             ]),
@@ -618,11 +646,9 @@
 
         const card = el('div', { class: 'tb-card tb-copy' }, [
             el('h3', { class: 'tb-card-title', html: `${tbIcon('duplicate')}<span>Copy to Other Days</span>` }),
-            el('p', {
+            container.dataset.tbMode === 'new' ? undefined : el('p', {
                 class: 'tb-card-subtitle',
-                text: container.dataset.tbMode === 'new'
-                    ? 'Create this entry on other days using what is filled in on the form. Click Save afterwards to keep it on this day too.'
-                    : 'Create the same entry on other days. This entry stays where it is. Unsaved changes in the form are not copied.'
+                text: 'Create the same entry on other days. This entry stays where it is. Unsaved changes in the form are not copied.'
             }),
             summary,
             el('div', { class: 'tb-field-label', text: 'Days' }),
@@ -708,11 +734,9 @@
 
         const card = el('div', { class: 'tb-card tb-move' }, [
             el('h3', { class: 'tb-card-title', html: `${tbIcon('move')}<span>Move Entry</span>` }),
-            el('p', {
+            container.dataset.tbMode === 'new' ? undefined : el('p', {
                 class: 'tb-card-subtitle',
-                text: container.dataset.tbMode === 'new'
-                    ? 'Save this entry on another day instead of this one, using what is filled in on the form.'
-                    : 'Move this entry to the day it should have been captured on. Unsaved changes in the form are not moved.'
+                text: 'Move this entry to the day it should have been captured on. Unsaved changes in the form are not moved.'
             }),
             summary,
             el('label', { class: 'tb-field-label', for: dateInput.id, text: 'Move to' }),
@@ -804,7 +828,6 @@
 
         card.replaceChildren(
             el('h3', { class: 'tb-card-title', html: `${tbIcon('copy')}<span>Templates</span>` }),
-            el('p', { class: 'tb-card-subtitle', text: 'Apply a saved template for this day (e.g. recurring meetings).' }),
             select,
             list,
             el('div', { class: 'tb-card-buttons' }, [addButton]),
@@ -823,7 +846,7 @@
         row.append(el('div', { class: 'tb-header-actions' }, [
             el('button', {
                 type: 'button',
-                class: 'tb-header-button',
+                class: 'tb-header-button tb-header-button--templates',
                 'aria-haspopup': 'dialog',
                 html: `${tbIcon('template')}<span>Manage Templates</span>`,
                 onclick: () => openDialog('manage', 'Manage templates', renderManageCard)
@@ -880,12 +903,22 @@
     }
 
     function loadSettings() {
-        chrome.storage.sync.get(STORAGE_KEY_DEFAULT_LOCATION, (stored) => {
+        chrome.storage.sync.get([STORAGE_KEY_DEFAULT_LOCATION, STORAGE_KEY_REMINDER_ENABLED, STORAGE_KEY_REMINDER_TIME], (stored) => {
             defaultLocationId = Number(stored[STORAGE_KEY_DEFAULT_LOCATION]) || DEFAULT_LOCATION_ID
+            reminder = {
+                enabled: stored[STORAGE_KEY_REMINDER_ENABLED] === true,
+                time: stored[STORAGE_KEY_REMINDER_TIME] || DEFAULT_REMINDER_TIME
+            }
         })
         chrome.storage.onChanged.addListener((changes, area) => {
             if (area === 'sync' && changes[STORAGE_KEY_DEFAULT_LOCATION]) {
                 defaultLocationId = Number(changes[STORAGE_KEY_DEFAULT_LOCATION].newValue) || DEFAULT_LOCATION_ID
+            }
+            if (area === 'sync' && changes[STORAGE_KEY_REMINDER_ENABLED]) {
+                reminder.enabled = changes[STORAGE_KEY_REMINDER_ENABLED].newValue === true
+            }
+            if (area === 'sync' && changes[STORAGE_KEY_REMINDER_TIME]) {
+                reminder.time = changes[STORAGE_KEY_REMINDER_TIME].newValue || DEFAULT_REMINDER_TIME
             }
         })
     }
@@ -907,14 +940,113 @@
 
         card.replaceChildren(
             el('h3', { class: 'tb-card-title', html: `${tbIcon('settings')}<span>Settings</span>` }),
-            el('p', { class: 'tb-card-subtitle', text: 'Saved to your browser profile and used on your next visits.' }),
+            el('div', { class: 'tb-field-label', text: 'Features' }),
+            el('div', { class: 'tb-features' }, [
+                buildFeatureToggle(STORAGE_KEY_QUICK_ACTIONS_ENABLED, 'bolt', 'Quick Actions'),
+                buildFeatureToggle(STORAGE_KEY_TEMPLATES_ENABLED, 'template', 'Templates')
+            ]),
             el('div', { class: 'tb-field-label', text: 'Default office' }),
-            el('p', { class: 'tb-card-subtitle tb-field-help', text: 'Selected under “Worked From” whenever you create a new entry.' }),
             el('div', { class: 'tb-choices tb-locations', role: 'radiogroup', 'aria-label': 'Default office' }, buttons),
+            ...buildReminderSettings(),
             el('div', { class: 'tb-card-buttons' }, [
                 el('button', { type: 'button', class: 'tb-button', text: 'Done', onclick: card.tbClose })
             ])
         )
+    }
+
+    // notifications are shown by the operating system, so it's also where they get blocked
+    function notificationHelp() {
+        const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || ''
+        if (/mac/i.test(platform)) {
+            return 'Allow your browser under System Settings > Notifications, and check Focus is off.'
+        }
+        if (/win/i.test(platform)) {
+            return 'Turn on notifications for your browser under Settings > System > Notifications, and check Do not disturb is off.'
+        }
+        return 'Check that your system allows notifications from your browser.'
+    }
+
+    // theme.js owns the on/off classes, so they are the current state
+    function buildFeatureToggle(key, icon, label) {
+        const offClass = FEATURE_OFF_CLASSES[key]
+        const toggle = el('button', {
+            type: 'button',
+            class: 'tb-feature-toggle',
+            role: 'switch',
+            onclick: () => {
+                const enabled = document.documentElement.classList.contains(offClass)
+                document.documentElement.classList.toggle(offClass, !enabled)
+                chrome.storage.sync.set({ [key]: enabled })
+                sync()
+            }
+        })
+
+        function sync() {
+            toggle.setAttribute('aria-checked', String(!document.documentElement.classList.contains(offClass)))
+            toggle.innerHTML = `${tbIcon(icon)}<span>${label}</span><span class="tb-switch" aria-hidden="true"></span>`
+        }
+        sync()
+        return toggle
+    }
+
+    function buildReminderSettings() {
+        const timeInput = el('input', {
+            type: 'time',
+            class: 'tb-time-input',
+            id: 'tb-reminder-time',
+            value: reminder.time,
+            'aria-label': 'Reminder time',
+            onchange: () => {
+                if (!/^\d{2}:\d{2}$/.test(timeInput.value)) return;
+                reminder.time = timeInput.value
+                chrome.storage.sync.set({ [STORAGE_KEY_REMINDER_TIME]: reminder.time })
+            }
+        })
+        const toggle = el('button', {
+            type: 'button',
+            class: 'tb-reminder-toggle',
+            role: 'switch',
+            onclick: () => {
+                reminder.enabled = !reminder.enabled
+                chrome.storage.sync.set({ [STORAGE_KEY_REMINDER_ENABLED]: reminder.enabled })
+                sync()
+            }
+        })
+        const testButton = el('button', {
+            type: 'button',
+            class: 'tb-small-button',
+            text: 'Send a test',
+            onclick: async () => {
+                testButton.disabled = true
+                let result
+                try {
+                    result = await chrome.runtime.sendMessage({ type: 'tb:test-reminder' })
+                } catch (e) {
+                    result = { ok: false, error: e.message }
+                }
+                testButton.disabled = !reminder.enabled
+                if (!result || !result.ok) {
+                    toast(`The test reminder failed: ${(result && result.error) || 'no reply from the extension'}. Try reloading it at chrome://extensions.`, true, 9000)
+                } else if (result.permission === 'denied') {
+                    toast('Chrome is blocking notifications from Timesheet Booster. Allow them in its site settings at chrome://settings/content/notifications.', true, 9000)
+                } else {
+                    toast(`Test reminder sent. Not seeing it? ${notificationHelp()}`, false, 9000)
+                }
+            }
+        })
+
+        function sync() {
+            toggle.setAttribute('aria-checked', String(reminder.enabled))
+            toggle.innerHTML = `${tbIcon('clock')}<span>Remind me at</span><span class="tb-switch" aria-hidden="true"></span>`
+            timeInput.disabled = !reminder.enabled
+            testButton.disabled = !reminder.enabled
+        }
+        sync()
+
+        return [
+            el('div', { class: 'tb-field-label', text: 'Daily reminder' }),
+            el('div', { class: 'tb-reminder' }, [toggle, timeInput, testButton])
+        ]
     }
 
     function renderManageCard(card) {

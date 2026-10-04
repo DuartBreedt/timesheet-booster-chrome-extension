@@ -49,9 +49,9 @@ While an action runs, the page is locked behind a loader that shows how many ent
 
 ![Quick Actions, entry form and Templates](docs/screenshots/entry-form.png)
 
-### Drag to adjust time
+### Drag or scroll to adjust time
 
-On the entry form, drag the time field right or up to add 15 minutes, and left or down to remove 15. The up and down arrow keys do the same. Values snap to the nearest quarter hour, between 0h15 and 23h45. Clicking without dragging still lets you type a time.
+On the entry form, drag the time field right or up to add 15 minutes, and left or down to remove 15. Scrolling up or down over it, and the up and down arrow keys, do the same. Values snap to the nearest quarter hour, between 0h15 and 23h45. Clicking without dragging still lets you type a time.
 
 ### Templates
 
@@ -60,6 +60,16 @@ Tick **Save as template** when adding an entry to save it. Templates are applied
 ### Capture celebrations
 
 Saving a new entry, applying a template or copying an entry plays a short animation on the day: the new block grows in, a small burst and a "+1h 30m" label appear where it ends, and the day total bumps. Reaching 8 hours on a day shows a "Day complete" label with a little more confetti. Leave entries only get the grow-in, and nothing animates when the system asks for reduced motion.
+
+### Daily reminder
+
+Turned on under **Settings** in the header, a notification at 16:30 on weekdays reminds you to capture the day, whichever tab you are on. **Open timesheets** switches to an open timesheets tab, or opens one, and **Remind me in 30 minutes** snoozes it. It is skipped when today already has 8 hours or is a public holiday, as last seen on timesheets.
+
+It is off by default. The time can be changed in the same place. **Send a test** shows one straight away. If nothing appears, your system is hiding the browser's notifications: on macOS, allow it under System Settings > Notifications and turn off Focus. On Windows, turn it on under Settings > System > Notifications and turn off Do not disturb.
+
+### Turning features off
+
+**Quick Actions** and **Templates** can each be switched off under **Settings**, and the entry form closes up the space they used. Both are on by default, and the choice is remembered.
 
 ### Default office
 

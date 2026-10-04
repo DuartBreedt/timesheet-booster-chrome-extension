@@ -1,6 +1,6 @@
 # Timesheet Booster
 
-## TODO 
+## TODO
 - Suggested templates. Let a template remember the weekdays it applies to. When a day is opened, list that day's templates first and offer an "Apply today's templates" button.
-- Week completeness indicator. Mark each day in the visible weeks as under 8 hours, empty (weekdays only) or over 12 hours, and show a banner near the end of the week or month listing the incomplete days.
-- Description checks. Show a soft warning (never block saving) when a description is poor or generic, e.g. very short or just "work", "dev" or "meeting". Short descriptions are fine when the category name contains "meeting". Empty descriptions are already blocked by timesheets, and the same text on every entry is valid for recurring meetings, so neither needs checking.
+- Project "Entelect Leave" with Category "Birthday Leave", indicates the individual's birthday. For this entry add bespoke styling to make it special and exciting. This entry will always take 8 hours of the day and is automatically assigned. This is difficult to test Locally. Please add a test button for me to see what it looks like for review.
+- Special styling for Christmas, spooky, valentines, easter, Freedom Day (27 April), Human Rights Day (21 March), Youth Day (16 June), Heritage Day (24 September), Day of Reconciliation (16 December)

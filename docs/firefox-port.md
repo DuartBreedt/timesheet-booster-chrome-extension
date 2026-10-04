@@ -2,7 +2,7 @@
 
 Plan for making Timesheet Booster run on Firefox. Safari is out of scope.
 
-The extension declares all its scripts in `manifest.json` and has no background worker, so it is ready for Firefox. Effort: half a day to a day, plus signing.
+The extension declares all its scripts in `manifest.json`, and its only background code is the daily reminder, so it is close to ready for Firefox. Effort: half a day to a day, plus signing.
 
 ## Firefox support
 
@@ -36,7 +36,9 @@ Start with the README. Add the options page if people get stuck.
 
 ### APIs
 
-No code changes are expected:
+No code changes are expected, apart from the background script:
+
+- Firefox MV3 has no service workers. Add `"scripts": ["constants.js", "background.js"]` next to `"service_worker"` under `background` (Chrome ignores it) and skip the `importScripts` call when it is undefined.
 
 - Firefox supports the `chrome.*` namespace with callbacks, which is what the extension uses (`chrome.storage`, `chrome.runtime.getURL`).
 - The MAIN-world bridges don't use extension APIs.

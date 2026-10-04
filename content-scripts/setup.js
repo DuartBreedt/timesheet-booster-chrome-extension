@@ -134,3 +134,59 @@ function storeData(dataItem) {
 
     syncData()
 }
+
+// Reloading or updating the extension cuts off the scripts already running in open tabs, and their next
+// chrome.* call throws "Extension context invalidated". Only a page refresh brings the new scripts in.
+function isExtensionContextValid() {
+    try {
+        return !!chrome.runtime.id
+    } catch (e) {
+        return false
+    }
+}
+
+function showReloadNotice() {
+    if (document.querySelector('.tb-reload-notice')) return
+    const notice = document.createElement('div')
+    notice.className = 'tb-toast tb-reload-notice'
+    notice.setAttribute('role', 'alert')
+    const text = document.createElement('span')
+    text.textContent = 'Timesheet Booster was updated. Refresh the page to keep using it.'
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.textContent = 'Refresh'
+    button.addEventListener('click', () => location.reload())
+    notice.append(text, button)
+    // a modal dialog would keep the notice under its backdrop, out of reach
+    document.querySelectorAll('dialog.tb-dialog[open]').forEach((dialog) => dialog.close())
+    document.body.append(notice)
+    button.focus()
+}
+
+const EXTENSION_UI_SELECTOR = '.pin, .color-picker, [class^="tb-"], [class*=" tb-"]'
+
+// capture phase runs before our controls' own handlers, so they never get to throw
+;['click', 'change', 'keydown'].forEach((type) => {
+    document.addEventListener(type, (event) => {
+        if (isExtensionContextValid()) return
+        const target = event.target
+        if (!(target instanceof Element) || !target.closest(EXTENSION_UI_SELECTOR) || target.closest('.tb-reload-notice')) return
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        showReloadNotice()
+    }, true)
+})
+
+// observers and timers can still reach chrome.* after the cut off
+window.addEventListener('error', (event) => {
+    if (!isExtensionContextValid() && /Extension context invalidated/.test(event.message)) {
+        event.preventDefault()
+        showReloadNotice()
+    }
+})
+window.addEventListener('unhandledrejection', (event) => {
+    if (!isExtensionContextValid() && /Extension context invalidated/.test(String(event.reason && event.reason.message))) {
+        event.preventDefault()
+        showReloadNotice()
+    }
+})
