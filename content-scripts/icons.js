@@ -10,6 +10,7 @@ TB_ICON_PATHS = {
     dots: '<path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="3"/>',
     kebab: '<path d="M12 6h.01M12 12h.01M12 18h.01" stroke-width="3"/>',
     check: '<path d="m5 12 5 5 9-10"/>',
+    cake: '<path d="M4 21h16"/><path d="M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7"/><path d="M5 16.5c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0"/><path d="M12 12V8.5"/><path d="M12 6c.9 0 1.4-.7 1.4-1.4S12 2 12 2s-1.4 1.9-1.4 2.6S11.1 6 12 6z"/>',
     smile: '<circle cx="12" cy="12" r="9"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/>',
     meh: '<circle cx="12" cy="12" r="9"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/><path d="M8.5 15h7"/>',
     frown: '<circle cx="12" cy="12" r="9"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/><path d="M8 16.5s1.5-2.5 4-2.5 4 2.5 4 2.5"/>',

@@ -17,6 +17,10 @@ function getColorFromData(project, category) {
     return projectData.color
 }
 
+function isBirthdayEntry(project, category) {
+    return String(project).trim() === BIRTHDAY_PROJECT && String(category).trim() === BIRTHDAY_CATEGORY
+}
+
 function setActiveColor(color) {
     document.documentElement.style.setProperty('--active-color', color);
 }

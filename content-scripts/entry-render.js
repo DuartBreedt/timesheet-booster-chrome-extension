@@ -94,6 +94,17 @@
         const category = capturedTime.dataset.tbCategory
         if (project === undefined || category === undefined) return;
 
+        // birthdays get their own look in redesign.css instead of the category colour
+        if (isBirthdayEntry(project, category)) {
+            if (capturedTime.dataset.tbSpecial === 'birthday') return;
+            capturedTime.dataset.tbSpecial = 'birthday'
+            const day = capturedTime.closest('.timeEntry')
+            document.dispatchEvent(new CustomEvent('tb:birthday-shown', {
+                detail: JSON.stringify({ date: (day && day.dataset.tbDate) || '' })
+            }))
+            return;
+        }
+
         // remember timesheets' own color so it can be restored later
         if (capturedTime.dataset.tbOriginalColor === undefined) {
             capturedTime.dataset.tbOriginalColor = capturedTime.style.backgroundColor

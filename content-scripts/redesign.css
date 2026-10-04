@@ -2194,6 +2194,121 @@ html .tb-toast--leaving {
     transform: translateY(8px);
 }
 
+/* Birthday leave (tagged by entry-render.js) fills the day, so it gets a party instead of a category colour */
+
+:root {
+    --tb-birthday-1: #c96f3b;
+    --tb-birthday-2: #a84d72;
+    --tb-birthday-3: #6e56a8;
+    --tb-birthday-4: #2f7f8c;
+    --tb-birthday-gradient: linear-gradient(100deg, var(--tb-birthday-1), var(--tb-birthday-2) 25%, var(--tb-birthday-3) 50%, var(--tb-birthday-4) 75%, var(--tb-birthday-1));
+}
+
+html .timeEntry-capturedTime[data-tb-special="birthday"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 12px;
+    /* hides timesheets' own "8h 00m", the label replaces it */
+    font-size: 0;
+    color: #ffffff !important;
+    background-color: var(--tb-birthday-2) !important;
+    background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.75) 0 1.4px, transparent 1.9px),
+        radial-gradient(circle, rgba(255, 228, 170, 0.7) 0 1.1px, transparent 1.6px),
+        var(--tb-birthday-gradient) !important;
+    background-repeat: repeat !important;
+    background-size: 46px 28px, 31px 28px, 300% 100% !important;
+    background-position: 0 -7px, 15px 6px, 0 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+    animation: tb-birthday-flow 12s linear infinite;
+}
+
+@keyframes tb-birthday-flow {
+    to {
+        background-position: 46px -7px, -16px 6px, 150% 0;
+    }
+}
+
+html .timeEntry-capturedTime[data-tb-special="birthday"]::before {
+    content: "";
+    flex: none;
+    width: 16px;
+    height: 16px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 21h16'/%3E%3Cpath d='M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7'/%3E%3Cpath d='M5 16.5c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0'/%3E%3Cpath d='M12 12V8.5'/%3E%3Cpath d='M12 6c.9 0 1.4-.7 1.4-1.4S12 2 12 2s-1.4 1.9-1.4 2.6S11.1 6 12 6z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 21h16'/%3E%3Cpath d='M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7'/%3E%3Cpath d='M5 16.5c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0'/%3E%3Cpath d='M12 12V8.5'/%3E%3Cpath d='M12 6c.9 0 1.4-.7 1.4-1.4S12 2 12 2s-1.4 1.9-1.4 2.6S11.1 6 12 6z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+html .timeEntry-capturedTime[data-tb-special="birthday"]::after {
+    content: "Happy birthday!";
+    font: 700 13px/28px var(--tb-font);
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 2px rgba(60, 20, 45, 0.45);
+}
+
+html .timeEntry-capturedTime[data-tb-special="birthday"]:hover::before {
+    animation: tb-birthday-hop 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tb-birthday-hop {
+    40% {
+        transform: translateY(-4px) rotate(-12deg);
+    }
+}
+
+html .timeEntry:has(.timeEntry-capturedTime[data-tb-special="birthday"]) .timeEntry-entry {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tb-birthday-2) 30%, transparent), 0 4px 14px color-mix(in srgb, var(--tb-birthday-3) 28%, transparent);
+}
+
+html .timeEntry:has(.timeEntry-capturedTime[data-tb-special="birthday"]) .timeEntry-date {
+    color: transparent;
+    background: linear-gradient(90deg, var(--tb-birthday-1), var(--tb-birthday-2), var(--tb-birthday-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+/* the public holiday pill sits inside the date and would inherit the transparent text */
+html .timeEntry:has(.timeEntry-capturedTime[data-tb-special="birthday"]) .timesheet-day-indicator {
+    color: var(--tb-on-accent);
+}
+
+html.tb-dark .timeEntry:has(.timeEntry-capturedTime[data-tb-special="birthday"]) .timeEntry-date {
+    background: linear-gradient(90deg, #eca65e, #e28fae, #a99be0);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+html .tb-celebration--birthday .tb-burst-ray {
+    height: 16px;
+    animation-duration: 700ms;
+}
+
+html .tb-celebration--birthday .tb-confetti {
+    width: 7px;
+    height: 4px;
+    animation-duration: 1900ms;
+}
+
+html .tb-celebration--birthday .tb-confetti--dot {
+    width: 5px;
+    height: 5px;
+}
+
+html .tb-celebration--birthday .tb-capture-label {
+    bottom: 22px;
+    padding: 5px 14px;
+    font-size: 14px;
+    line-height: 18px;
+    background: linear-gradient(100deg, var(--tb-birthday-1), var(--tb-birthday-2) 50%, var(--tb-birthday-3));
+    animation-duration: 3000ms;
+}
+
+html.tb-dark .tb-celebration--birthday .tb-capture-label {
+    border-color: transparent;
+}
+
 /* Locks the page while a quick action runs; the visuals fade in late so quick actions don't flash */
 
 html .tb-busy {
@@ -2522,6 +2637,11 @@ html.tb-dark .tb-celebration--day .tb-capture-label {
     html .tb-busy-bar::after {
         animation: none;
         transition: none;
+    }
+
+    html .timeEntry-capturedTime[data-tb-special="birthday"],
+    html .timeEntry-capturedTime[data-tb-special="birthday"]:hover::before {
+        animation: none;
     }
 
     html .tb-spinner {

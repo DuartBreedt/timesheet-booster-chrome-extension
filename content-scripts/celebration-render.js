@@ -10,11 +10,13 @@
     const RAY_COUNT = 10;
     const CONFETTI_COUNT = 7;
     const FULL_DAY_CONFETTI_COUNT = 22;
+    const BIRTHDAY_CONFETTI_COUNT = 44;
     // muted warm and cool accents from the palette, so the confetti sits with the rest of the page
     const CONFETTI_COLORS = ['#eca65e', '#7cb677', '#7e95c8', '#c57791', '#cab072', '#72adb9'];
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     document.addEventListener('tb:entry-captured', onEntryCaptured)
+    document.addEventListener('tb:birthday-shown', onBirthdayShown)
 
     function onEntryCaptured(event) {
         const { date, hours, dayHours, isLeave } = JSON.parse(event.detail)
@@ -34,7 +36,40 @@
 
             const rect = block.getBoundingClientRect()
             if (rect.bottom < 0 || rect.top > window.innerHeight) return;
-            celebrate(rect.right, rect.top + rect.height / 2, getComputedStyle(block).backgroundColor, hours, isDayComplete)
+            celebrate(rect.right, rect.top + rect.height / 2, getComputedStyle(block).backgroundColor, isDayComplete
+                ? { variant: 'day', icon: 'check', text: 'Day complete' }
+                : { variant: 'entry', text: `+${formatDuration(hours)}` })
+        })
+    }
+
+    // bursts the first time each birthday scrolls into view
+    function onBirthdayShown(event) {
+        const { date } = JSON.parse(event.detail)
+        const day = date ? document.querySelector(`.timeEntry[data-tb-date="${date}"]`) : undefined
+        const block = (day || document).querySelector('.timeEntry-capturedTime[data-tb-special="birthday"]')
+        if (!block || reducedMotion.matches) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            if (!entries.some((entry) => entry.isIntersecting)) return;
+            observer.disconnect()
+            const dayElement = block.closest('.timeEntry')
+            const birthday = dayElement ? dayElement.dataset.tbDate : ''
+
+            chrome.storage.local.get(STORAGE_KEY_BIRTHDAY_CELEBRATED, (stored) => {
+                if (birthday && stored[STORAGE_KEY_BIRTHDAY_CELEBRATED] === birthday) return;
+                chrome.storage.local.set({ [STORAGE_KEY_BIRTHDAY_CELEBRATED]: birthday })
+                burstFromBirthday(block)
+            })
+        }, { threshold: 0.6 })
+        observer.observe(block)
+    }
+
+    function burstFromBirthday(block) {
+        const rect = block.getBoundingClientRect()
+        celebrate(rect.left + rect.width / 2, rect.top + rect.height / 2, CONFETTI_COLORS[0], {
+            variant: 'birthday',
+            icon: 'cake',
+            text: 'Happy birthday!'
         })
     }
 
@@ -52,9 +87,10 @@
         node.addEventListener('animationend', () => node.classList.remove(className), { once: true })
     }
 
-    function celebrate(x, y, color, hours, isDayComplete) {
+    // variant: "entry" for a saved entry, "day" for reaching 8 hours, "birthday" for birthday leave
+    function celebrate(x, y, color, { variant, icon, text }) {
         const layer = document.createElement('div')
-        layer.className = `tb-celebration${isDayComplete ? ' tb-celebration--day' : ''}`
+        layer.className = `tb-celebration${variant === 'entry' ? '' : ` tb-celebration--${variant}`}`
         layer.setAttribute('aria-hidden', 'true')
         layer.style.setProperty('--tb-burst-x', `${x}px`)
         layer.style.setProperty('--tb-burst-y', `${y}px`)
@@ -67,12 +103,14 @@
             layer.append(ray)
         }
 
-        const count = isDayComplete ? FULL_DAY_CONFETTI_COUNT : CONFETTI_COUNT
-        const spread = isDayComplete ? 90 : 46
+        const count = { entry: CONFETTI_COUNT, day: FULL_DAY_CONFETTI_COUNT, birthday: BIRTHDAY_CONFETTI_COUNT }[variant]
+        const spread = { entry: 46, day: 90, birthday: 160 }[variant]
+        // a birthday bursts all the way round, the rest fan upwards
+        const arc = variant === 'birthday' ? Math.PI * 2 : Math.PI * 1.1
         for (let i = 0; i < count; i++) {
             const piece = document.createElement('span')
             piece.className = `tb-confetti${i % 3 === 0 ? ' tb-confetti--dot' : ''}`
-            const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.1
+            const angle = -Math.PI / 2 + (Math.random() - 0.5) * arc
             const distance = spread * (0.55 + Math.random() * 0.45)
             piece.style.setProperty('--tb-dx', `${Math.cos(angle) * distance}px`)
             piece.style.setProperty('--tb-dy', `${Math.sin(angle) * distance}px`)
@@ -84,16 +122,12 @@
 
         const label = document.createElement('span')
         label.className = 'tb-capture-label'
-        if (isDayComplete) {
-            label.innerHTML = tbIcon('check')
-            label.append('Day complete')
-        } else {
-            label.textContent = `+${formatDuration(hours)}`
-        }
+        if (icon) label.innerHTML = tbIcon(icon)
+        label.append(text)
         layer.append(label)
 
         document.body.append(layer)
-        setTimeout(() => layer.remove(), isDayComplete ? 2400 : 1600)
+        setTimeout(() => layer.remove(), { entry: 1600, day: 2400, birthday: 3200 }[variant])
     }
 
     function formatDuration(hours) {

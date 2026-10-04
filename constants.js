@@ -8,6 +8,8 @@ STORAGE_KEY_REMINDER_TIME = 'reminderTime'
 STORAGE_KEY_TODAY_HOURS = 'todayHours'
 DEFAULT_REMINDER_TIME = '16:30'
 STORAGE_KEY_TEMPLATES_ENABLED = 'templatesEnabled'
+// the last birthday that got its confetti, so it only bursts once per birthday
+STORAGE_KEY_BIRTHDAY_CELEBRATED = 'birthdayCelebrated'
 STORAGE_KEY_QUICK_ACTIONS_ENABLED = 'quickActionsEnabled'
 // html classes theme.js sets for features turned off in settings; everything is on unless stored as false
 FEATURE_OFF_CLASSES = {
@@ -23,3 +25,7 @@ LIST_ITEM_SELECTOR = ".timesheetlistitem";
 
 SUPPORTED_TIMESHEETS_URLS = /https:\/\/.*employee\.entelect\.co\.za\/Timesheet.*/
 TIMESHEETS_URL = 'https://employee.entelect.co.za/Timesheet'
+
+// timesheets assigns this leave automatically on the employee's birthday
+BIRTHDAY_PROJECT = 'Entelect Leave'
+BIRTHDAY_CATEGORY = 'Birthday Leave'
