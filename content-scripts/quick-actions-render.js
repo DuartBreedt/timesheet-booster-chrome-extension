@@ -202,7 +202,87 @@
             applyDefaultLocation(container)
         }
         if (content) groupFormButtons(content)
+        makeTimeScrubbable(container)
         if (container.dataset.tbMode === 'new') revealEntryActionsOnDescription(container, quick, showForm)
+    }
+
+    // Time field: drag right/up for +15 minutes, left/down for -15 (arrow keys too). A plain click still
+    // edits the text. Changes fire "change" so the form's knockout binding picks them up as if typed.
+    const TIME_STEP_MINUTES = 15
+    const TIME_STEP_PIXELS = 10
+    const TIME_MIN_MINUTES = 15
+    const TIME_MAX_MINUTES = 23 * 60 + 45
+
+    function parseTime(value) {
+        const match = /^\s*(\d{1,2})h(\d{1,2})\s*$/i.exec(value || '')
+        return match ? Number(match[1]) * 60 + Number(match[2]) : 0
+    }
+
+    function setTime(input, minutes) {
+        const clamped = Math.min(TIME_MAX_MINUTES, Math.max(TIME_MIN_MINUTES, minutes))
+        const formatted = `${Math.floor(clamped / 60)}h${String(clamped % 60).padStart(2, '0')}`
+        if (input.value === formatted) return;
+        input.value = formatted
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+    }
+
+    // Steps from the nearest quarter hour, so 1h20 dragged up becomes 1h30, not 1h35
+    function snapToStep(minutes) {
+        return Math.round(minutes / TIME_STEP_MINUTES) * TIME_STEP_MINUTES
+    }
+
+    function makeTimeScrubbable(container) {
+        const input = container.querySelector('.timeEntry-content-time input')
+        if (!input || input.classList.contains('tb-time-scrub')) return;
+        input.classList.add('tb-time-scrub')
+        input.title = 'Drag left/right or up/down to change by 15 minutes (arrow keys work too), or click to type'
+
+        let drag // { x, y, minutes, steps, moved }
+
+        input.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return;
+            // Stops the drag selecting text; a click without movement focuses the field below
+            e.preventDefault()
+            drag = { x: e.clientX, y: e.clientY, minutes: snapToStep(parseTime(input.value)), steps: 0, moved: false }
+            // Keeps the drag going when the pointer leaves the field
+            try { input.setPointerCapture(e.pointerId) } catch (err) { /* not a capturable pointer */ }
+        })
+
+        input.addEventListener('pointermove', (e) => {
+            if (!drag) return;
+            const dx = e.clientX - drag.x
+            const dy = e.clientY - drag.y
+            if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+            drag.moved = true
+            document.documentElement.classList.add('tb-scrubbing')
+
+            // Right and up increase, left and down decrease
+            const steps = Math.trunc((dx - dy) / TIME_STEP_PIXELS)
+            if (steps !== drag.steps) {
+                drag.steps = steps
+                setTime(input, drag.minutes + steps * TIME_STEP_MINUTES)
+            }
+        })
+
+        const endDrag = () => {
+            if (!drag) return;
+            const wasDrag = drag.moved
+            drag = undefined
+            document.documentElement.classList.remove('tb-scrubbing')
+            if (!wasDrag) {
+                input.focus()
+                input.select()
+            }
+        }
+        input.addEventListener('pointerup', endDrag)
+        input.addEventListener('pointercancel', endDrag)
+
+        input.addEventListener('keydown', (e) => {
+            const direction = { ArrowUp: 1, ArrowDown: -1 }[e.key]
+            if (!direction) return;
+            e.preventDefault()
+            setTime(input, snapToStep(parseTime(input.value)) + direction * TIME_STEP_MINUTES)
+        })
     }
 
     // An unsaved entry can only be moved or copied once there is something to move: wait for a description

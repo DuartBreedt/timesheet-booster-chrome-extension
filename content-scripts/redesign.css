@@ -1246,6 +1246,24 @@ html .timeEntry-content textarea.timeEntry-input {
     width: 420px;
 }
 
+/* Time field: drag to change by 15 minutes (quick-actions-render.js) */
+html .timeEntry-content .tb-time-scrub {
+    cursor: ew-resize;
+    touch-action: none;
+    font-variant-numeric: tabular-nums;
+}
+
+html.tb-scrubbing,
+html.tb-scrubbing * {
+    cursor: ew-resize !important;
+    user-select: none;
+}
+
+html.tb-scrubbing .tb-time-scrub {
+    border-color: var(--tb-blue-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tb-blue-text) 25%, transparent);
+}
+
 html .timeEntry-content .timeEntry-input.tiny {
     height: 34px;
 }
