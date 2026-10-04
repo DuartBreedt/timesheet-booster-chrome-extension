@@ -24,6 +24,17 @@ Pinned categories are listed first. Pins and colours are stored in Chrome sync s
 
 ![Pinned categories](docs/screenshots/pinning.png)
 
+### Stats
+
+A collapsible **Stats** panel above the days summarises the weeks on screen. It stays open or closed the way you left it.
+
+- **Hours logged** against the hours expected so far, with any leave included.
+- **Days complete:** the share of working days (weekdays up to today, excluding public holidays) with 8 hours or more.
+- **Billable** and **signed off** percentages, and the number of entries with their average length.
+- **Time per project** and **time per category**, using your colours.
+- **Worked from** and **sentiment** breakdowns.
+- **Short days:** which working days are under 8 hours, and by how much.
+
 ### Quick Actions
 
 Shown next to the entry form when a day is open:
@@ -32,11 +43,21 @@ Shown next to the entry form when a day is open:
 - **Move Entry:** move a saved entry to another day.
 - **Copy to Other Days:** create the same entry on other days, with a **Weekdays** shortcut.
 
+While an action runs, the page is locked behind a loader that shows how many entries or days are done. The panel closes once it finishes.
+
 ![Quick Actions, entry form and Templates](docs/screenshots/entry-form.png)
+
+### Drag to adjust time
+
+On the entry form, drag the time field right or up to add 15 minutes, and left or down to remove 15. The up and down arrow keys do the same. Values snap to the nearest quarter hour, between 0h15 and 23h45. Clicking without dragging still lets you type a time.
 
 ### Templates
 
 Tick **Save as template** when adding an entry to save it. Templates are applied from the Templates card next to the entry form, and renamed or deleted from **Manage Templates** in the header.
+
+### Capture celebrations
+
+Saving a new entry, applying a template or copying an entry plays a short animation on the day: the new block grows in, a small burst and a "+1h 30m" label appear where it ends, and the day total bumps. Reaching 8 hours on a day shows a "Day complete" label with a little more confetti. Leave entries only get the grow-in, and nothing animates when the system asks for reduced motion.
 
 ### Default office
 

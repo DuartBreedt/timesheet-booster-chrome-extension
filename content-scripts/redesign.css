@@ -2042,6 +2042,307 @@ html .tb-toast--leaving {
     transform: translateY(8px);
 }
 
+/* Locks the page while a quick action runs; the visuals fade in late so quick actions don't flash */
+
+html .tb-busy {
+    position: fixed;
+    inset: 0;
+    /* below .tb-celebration so copies still celebrate while the page is locked */
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: progress;
+    background: color-mix(in srgb, var(--tb-page) 55%, transparent);
+    animation: tb-busy-in 220ms ease-out 250ms both;
+}
+
+@keyframes tb-busy-in {
+    from {
+        opacity: 0;
+    }
+}
+
+html .tb-busy-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 240px;
+    padding: 16px 20px 18px;
+    overflow: hidden;
+    color: var(--tb-ink);
+    background: var(--tb-raised);
+    border: 1px solid var(--tb-card-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, 0.18);
+}
+
+html .tb-spinner {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border: 2.5px solid var(--tb-line);
+    border-top-color: var(--tb-blue);
+    border-radius: 50%;
+    animation: tb-spin 800ms linear infinite;
+}
+
+@keyframes tb-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+html .tb-busy-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+html .tb-busy-text strong {
+    font: 600 14px/18px var(--tb-font);
+}
+
+html .tb-busy-progress {
+    font: 500 12px/16px var(--tb-font);
+    color: var(--tb-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+html .tb-busy-progress:empty {
+    display: none;
+}
+
+html .tb-busy-bar {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--tb-line);
+}
+
+html .tb-busy-bar::after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 35%;
+    content: "";
+    background: var(--tb-blue);
+    border-radius: 0 2px 2px 0;
+    animation: tb-busy-slide 1100ms ease-in-out infinite;
+}
+
+html .tb-busy[data-tb-determinate] .tb-busy-bar::after {
+    width: calc(var(--tb-progress) * 100%);
+    animation: none;
+    transition: width 300ms ease-out;
+}
+
+@keyframes tb-busy-slide {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(290%);
+    }
+}
+
+html.tb-dark .tb-busy-card {
+    border-color: var(--tb-control-border);
+    box-shadow: none;
+}
+
+/* Celebrating a newly captured entry: the block grows in, then a small burst from where it ends */
+
+html .timeEntry-capturedTime[data-tb-fresh] {
+    transform-origin: left center;
+    background-image: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.5) 50%, transparent 65%) !important;
+    background-repeat: no-repeat;
+    background-size: 250% 100%;
+    animation: tb-settle 520ms cubic-bezier(0.34, 1.56, 0.64, 1), tb-sheen 900ms 160ms ease-out both;
+}
+
+@keyframes tb-settle {
+    from {
+        opacity: 0.5;
+        transform: scaleX(0.35);
+    }
+}
+
+@keyframes tb-sheen {
+    from {
+        background-position: 130% 0;
+    }
+    to {
+        background-position: -130% 0;
+    }
+}
+
+html .timeEntry-totalHoursWorked.tb-total-bump {
+    display: inline-block;
+    animation: tb-total-bump 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tb-total-bump {
+    35% {
+        color: var(--tb-green-text);
+        transform: scale(1.14);
+    }
+}
+
+html .timeEntry.tb-day-complete .timeEntry-entry {
+    animation: tb-day-ring 1100ms ease-out;
+}
+
+@keyframes tb-day-ring {
+    from {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--tb-green) 55%, transparent);
+    }
+    to {
+        box-shadow: 0 0 0 10px color-mix(in srgb, var(--tb-green) 0%, transparent);
+    }
+}
+
+html .tb-celebration {
+    position: fixed;
+    top: var(--tb-burst-y);
+    left: var(--tb-burst-x);
+    z-index: 10000;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+html .tb-burst-ray {
+    position: absolute;
+    top: -5px;
+    left: -1px;
+    width: 2px;
+    height: 10px;
+    background: var(--tb-burst-color);
+    border-radius: 1px;
+    opacity: 0;
+    animation: tb-ray 520ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes tb-ray {
+    0% {
+        opacity: 0;
+        transform: rotate(var(--tb-angle)) translateY(-8px) scaleY(0.2);
+    }
+    30% {
+        opacity: 1;
+        transform: rotate(var(--tb-angle)) translateY(-17px) scaleY(1);
+    }
+    100% {
+        opacity: 0;
+        transform: rotate(var(--tb-angle)) translateY(-26px) scaleY(0.1);
+    }
+}
+
+html .tb-celebration--day .tb-burst-ray {
+    height: 14px;
+    animation-duration: 650ms;
+}
+
+html .tb-confetti {
+    position: absolute;
+    top: -2px;
+    left: -3px;
+    width: 6px;
+    height: 3px;
+    background: var(--tb-confetti-color);
+    border-radius: 1px;
+    opacity: 0;
+    animation: tb-confetti 1000ms cubic-bezier(0.15, 0.6, 0.35, 1) var(--tb-delay) forwards;
+}
+
+html .tb-confetti--dot {
+    top: -2px;
+    left: -2px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+}
+
+html .tb-celebration--day .tb-confetti {
+    animation-duration: 1500ms;
+}
+
+@keyframes tb-confetti {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0);
+    }
+    45% {
+        opacity: 1;
+        transform: translate(var(--tb-dx), var(--tb-dy)) rotate(calc(var(--tb-spin) * 0.5));
+    }
+    100% {
+        opacity: 0;
+        transform: translate(calc(var(--tb-dx) * 1.2), calc(var(--tb-dy) + 34px)) rotate(var(--tb-spin));
+    }
+}
+
+html .tb-capture-label {
+    position: absolute;
+    bottom: 18px;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    font: 600 12px/16px var(--tb-font);
+    color: var(--tb-on-accent);
+    white-space: nowrap;
+    background: var(--tb-toast);
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(16, 24, 40, 0.2);
+    opacity: 0;
+    animation: tb-label-rise 1400ms cubic-bezier(0.2, 0.7, 0.3, 1) 80ms forwards;
+}
+
+html .tb-celebration--day .tb-capture-label {
+    background: var(--tb-green);
+    animation-duration: 2200ms;
+}
+
+html .tb-capture-label .tb-icon {
+    width: 13px;
+    height: 13px;
+}
+
+@keyframes tb-label-rise {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 6px) scale(0.85);
+    }
+    18% {
+        opacity: 1;
+        transform: translate(-50%, -4px) scale(1);
+    }
+    75% {
+        opacity: 1;
+        transform: translate(-50%, -8px);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -14px);
+    }
+}
+
+html.tb-dark .tb-capture-label {
+    border: 1px solid var(--tb-control-border);
+    box-shadow: none;
+}
+
+html.tb-dark .tb-celebration--day .tb-capture-label {
+    border-color: transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
     html .tb-toast,
     html .tb-action,
@@ -2053,5 +2354,25 @@ html .tb-toast--leaving {
     html .tb-swatch,
     html .timesheet-section .timesheetlistitem {
         transition: none;
+    }
+
+    html .timeEntry-capturedTime[data-tb-fresh],
+    html .timeEntry-totalHoursWorked.tb-total-bump,
+    html .timeEntry.tb-day-complete .timeEntry-entry {
+        animation: none;
+    }
+
+    html .timeEntry-capturedTime[data-tb-fresh] {
+        background-image: none !important;
+    }
+
+    html .tb-busy,
+    html .tb-busy-bar::after {
+        animation: none;
+        transition: none;
+    }
+
+    html .tb-spinner {
+        animation-duration: 2400ms;
     }
 }

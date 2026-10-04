@@ -73,19 +73,29 @@ function clearCategoryColor(project, category) {
 
 // requests to the MAIN-world bridges, answered with a tb:result event carrying the same id
 const bridgeRequests = new Map()
+const bridgeProgress = new Map()
 
 document.addEventListener('tb:result', (event) => {
     const result = JSON.parse(event.detail)
     const resolve = bridgeRequests.get(result.id)
     if (!resolve) return
     bridgeRequests.delete(result.id)
+    bridgeProgress.delete(result.id)
     resolve(result)
 })
 
-function sendBridgeCommand(command) {
+// commands that work through entries one at a time report each step with a tb:progress event
+document.addEventListener('tb:progress', (event) => {
+    const progress = JSON.parse(event.detail)
+    const onProgress = bridgeProgress.get(progress.id)
+    if (onProgress) onProgress(progress)
+})
+
+function sendBridgeCommand(command, onProgress) {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
     return new Promise((resolve) => {
         bridgeRequests.set(id, resolve)
+        if (onProgress) bridgeProgress.set(id, onProgress)
         document.dispatchEvent(new CustomEvent('tb:command', { detail: JSON.stringify(Object.assign({ id }, command)) }))
     })
 }

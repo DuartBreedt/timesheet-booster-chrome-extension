@@ -49,13 +49,13 @@
             if (!entryContent || entryContent.options.element !== container) return;
 
             const isNew = !entryContent.options.entryId;
-            if (isNew) captureTemplateOnSave(entryContent, container);
+            if (isNew) watchNewEntrySave(widget, entryContent, container);
             container.dataset.tbMode = isNew ? 'new' : 'edit';
         });
     }
 
     // hand the entry over once timesheets confirm it, if "save as template" was ticked
-    function captureTemplateOnSave(entryContent, container) {
+    function watchNewEntrySave(widget, entryContent, container) {
         const onSuccess = entryContent.options.onSuccess;
         entryContent.options.onSuccess = function (entry) {
             const toggle = container.querySelector('.tb-save-template-toggle');
@@ -63,8 +63,27 @@
                 const nameInput = container.querySelector('.tb-save-template-name');
                 emit('tb:template-captured', { name: nameInput ? nameInput.value.trim() : '', entry: entry });
             }
-            return onSuccess.apply(this, arguments);
+            const result = onSuccess.apply(this, arguments);
+            announceCaptured(widget, entry);
+            return result;
         };
+    }
+
+    // waits a frame so the day has redrawn and the new block exists to celebrate
+    function announceCaptured(widget, entry) {
+        requestAnimationFrame(() => {
+            const entries = widget.options.timesheetEntries;
+            const index = entries.findIndex((e) => e === entry || (entry.EntryId && e.EntryId === entry.EntryId));
+            const item = (widget.existingItems || [])[index];
+            if (item && item[0]) item[0].dataset.tbFresh = '';
+
+            emit('tb:entry-captured', {
+                date: formatDate(widget.options.date),
+                hours: Number(entry.DurationInHours) || 0,
+                dayHours: entries.reduce((sum, e) => sum + (Number(e.DurationInHours) || 0), 0),
+                isLeave: !!entry.IsLeave
+            });
+        });
     }
 
     function post(url, payload) {
@@ -130,7 +149,8 @@
         let updated = 0;
 
         // one at a time, like a user saving each entry
-        for (const entry of editable) {
+        for (const [done, entry] of editable.entries()) {
+            reportProgress(command, done, editable.length);
             const changed = Object.assign({}, entry);
             if (locationId) {
                 changed.WorkedFromLocationId = locationId;
@@ -196,6 +216,7 @@
         // this panel lives inside the open form, so close it first
         if (widget.entryContent) widget.entryContent.options.onCancel();
         widget._addTimesheetEntry(entry);
+        announceCaptured(widget, entry);
         return { ok: true, message: `Added "${template.name}" to the day.` };
     }
 
@@ -260,7 +281,11 @@
         if (isNew) {
             entryContent.options.onCancel();
             const newTarget = getDayWidget(command.targetDate);
-            if (newTarget) newTarget._addTimesheetEntry(Object.assign({}, entry, { EntryId: created.entryId, Locations: LOCATIONS }));
+            if (newTarget) {
+                const saved = Object.assign({}, entry, { EntryId: created.entryId, Locations: LOCATIONS });
+                newTarget._addTimesheetEntry(saved);
+                announceCaptured(newTarget, saved);
+            }
             return { ok: true, message: `Saved "${entry.CategoryName}" on ${command.targetLabel} instead.` };
         }
 
@@ -290,6 +315,10 @@
         document.dispatchEvent(new CustomEvent(type, { detail: JSON.stringify(detail) }));
     }
 
+    function reportProgress(command, done, total) {
+        emit('tb:progress', { id: command.id, done: done, total: total });
+    }
+
     function redraw(widget) {
         widget._refresh();
         widget.refreshHourEntry();
@@ -316,7 +345,8 @@
         const notDeleted = [];
         let moved = 0;
 
-        for (const entry of movable) {
+        for (const [done, entry] of movable.entries()) {
+            reportProgress(command, done, movable.length);
             const created = await post(widget.options.submitUrl, toRequest(widget, entry, 0, command.targetDate));
             if (!created.success) {
                 notCopied.push(`${entry.CategoryName} (${errorText(created)})`);
@@ -354,7 +384,8 @@
         const failures = [];
         let deleted = 0;
 
-        for (const entry of deletable) {
+        for (const [done, entry] of deletable.entries()) {
+            reportProgress(command, done, deletable.length);
             const removed = await post(widget.options.deleteUrl, { timesheetEntryId: entry.EntryId });
             if (removed.success) {
                 widget.options.timesheetEntries = widget.options.timesheetEntries.filter((e) => e !== entry);
@@ -383,7 +414,8 @@
 
         const copied = [];
         const failures = [];
-        for (const t of targets) {
+        for (const [done, t] of targets.entries()) {
+            reportProgress(command, done, targets.length);
             const created = await post(widget.options.submitUrl, toRequest(widget, entry, 0, t.date));
             if (!created.success) {
                 failures.push(`${t.label} (${errorText(created)})`);
@@ -392,7 +424,11 @@
             copied.push(t.label);
             // Days in view show the copy straight away
             const target = getDayWidget(t.date);
-            if (target) target._addTimesheetEntry(Object.assign({}, entry, { EntryId: created.entryId }));
+            if (target) {
+                const copy = Object.assign({}, entry, { EntryId: created.entryId });
+                target._addTimesheetEntry(copy);
+                announceCaptured(target, copy);
+            }
         }
 
         let message = copied.length

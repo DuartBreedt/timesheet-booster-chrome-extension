@@ -331,6 +331,42 @@
         if (focusTarget) focusTarget.focus({ preventScroll: true })
     }
 
+    // Changes go through one entry at a time, so the page is locked until they finish: clicking around meanwhile
+    // could edit an entry that is about to move, or close the form the panel lives in
+    async function runLocked(label, unit, command) {
+        const progressText = el('small', { class: 'tb-busy-progress' })
+        const overlay = el('div', { class: 'tb-busy', role: 'status', 'aria-live': 'polite' }, [
+            el('div', { class: 'tb-busy-card' }, [
+                el('span', { class: 'tb-spinner', 'aria-hidden': 'true' }),
+                el('div', { class: 'tb-busy-text' }, [el('strong', { text: label }), progressText]),
+                el('span', { class: 'tb-busy-bar', 'aria-hidden': 'true' })
+            ])
+        ])
+        const focused = document.activeElement
+        const locked = Array.from(document.body.children).filter((node) => !node.inert)
+        locked.forEach((node) => { node.inert = true })
+        document.body.append(overlay)
+        window.addEventListener('beforeunload', warnWhileBusy)
+
+        try {
+            return await sendBridgeCommand(command, ({ done, total }) => {
+                overlay.dataset.tbDeterminate = ''
+                overlay.style.setProperty('--tb-progress', String(total ? done / total : 0))
+                progressText.textContent = `${done + 1} of ${total} ${unit}`
+            })
+        } finally {
+            window.removeEventListener('beforeunload', warnWhileBusy)
+            locked.forEach((node) => { node.inert = false })
+            overlay.remove()
+            if (focused && focused.isConnected) focused.focus({ preventScroll: true })
+        }
+    }
+
+    function warnWhileBusy(event) {
+        event.preventDefault()
+        event.returnValue = ''
+    }
+
     // A finished quick action closes its panel and returns to the entry form (if the form is still open,
     // moving or deleting closes it), so the outcome is shown as a toast. Failures stay in the panel.
     function showResult(result, status, close) {
@@ -406,11 +442,11 @@
     function buildBulkCard(day, close, refreshTotal) {
         const status = el('p', { class: 'tb-status', role: 'status' })
 
-        const run = async (button, busyText, command, closesForm) => {
+        const run = async (button, busyText, command) => {
             button.disabled = true
             status.className = 'tb-status'
-            status.textContent = busyText
-            const result = await sendBridgeCommand(Object.assign({ date: day.dataset.tbDate }, command))
+            status.textContent = ''
+            const result = await runLocked(busyText, 'entries', Object.assign({ date: day.dataset.tbDate }, command))
             refreshTotal()
             updateButtons()
             showResult(result, status, close)
@@ -430,23 +466,23 @@
             type: 'button',
             class: 'tb-button tb-button--primary',
             html: `${tbIcon('check')}<span>Set office</span>`,
-            onclick: () => run(officeButton, 'Updating entries…', { type: 'bulkEdit', locationId: locations.getValue() })
+            onclick: () => run(officeButton, 'Updating entries', { type: 'bulkEdit', locationId: locations.getValue() })
         })
         const sentimentButton = el('button', {
             type: 'button',
             class: 'tb-button tb-button--primary',
             html: `${tbIcon('check')}<span>Set sentiment</span>`,
-            onclick: () => run(sentimentButton, 'Updating entries…', { type: 'bulkEdit', sentimentId: sentiments.getValue() })
+            onclick: () => run(sentimentButton, 'Updating entries', { type: 'bulkEdit', sentimentId: sentiments.getValue() })
         })
         const moveButton = el('button', {
             type: 'button',
             class: 'tb-button tb-button--primary',
             html: `${tbIcon('move')}<span>Move all</span>`,
-            onclick: () => run(moveButton, 'Moving entries…', {
+            onclick: () => run(moveButton, 'Moving entries', {
                 type: 'moveDay',
                 targetDate: dateInput.value,
                 targetLabel: formatDayLabel(dateInput.value)
-            }, true)
+            })
         })
         const deleteButton = el('button', {
             type: 'button',
@@ -454,7 +490,7 @@
             html: `${tbIcon('close')}<span>Delete all</span>`,
             onclick: () => {
                 if (!confirm(`Delete all entries on ${getDayLabel(day)}? Signed-off entries are kept. This cannot be undone.`)) return;
-                run(deleteButton, 'Deleting entries…', { type: 'deleteDay' }, true)
+                run(deleteButton, 'Deleting entries', { type: 'deleteDay' })
             }
         })
 
@@ -568,12 +604,12 @@
             onclick: async () => {
                 copyButton.disabled = true
                 status.className = 'tb-status'
-                status.textContent = 'Copying entry…'
+                status.textContent = ''
                 const targets = Array.from(selected).sort().map((dateKey) => ({
                     date: dateKey,
                     label: pills.querySelector(`[data-date="${dateKey}"]`).textContent
                 }))
-                const result = await sendBridgeCommand({ type: 'copyEntry', date: day.dataset.tbDate, targets })
+                const result = await runLocked('Copying entry', 'days', { type: 'copyEntry', date: day.dataset.tbDate, targets })
                 if (result.ok) selected.clear()
                 syncSelection()
                 showResult(result, status, close)
@@ -662,9 +698,9 @@
             onclick: async () => {
                 moveButton.disabled = true
                 status.className = 'tb-status'
-                status.textContent = 'Moving entry…'
+                status.textContent = ''
                 const targetLabel = formatDayLabel(dateInput.value)
-                const result = await sendBridgeCommand({ type: 'moveEntry', date: day.dataset.tbDate, targetDate: dateInput.value, targetLabel })
+                const result = await runLocked('Moving entry', '', { type: 'moveEntry', date: day.dataset.tbDate, targetDate: dateInput.value, targetLabel })
                 update()
                 showResult(result, status, close)
             }
@@ -726,8 +762,8 @@
                 if (!template) return;
                 addButton.disabled = true
                 status.className = 'tb-status'
-                status.textContent = 'Adding entry…'
-                const result = await sendBridgeCommand({ type: 'applyTemplate', date: day.dataset.tbDate, template })
+                status.textContent = ''
+                const result = await runLocked('Adding entry', '', { type: 'applyTemplate', date: day.dataset.tbDate, template })
                 if (result.ok) toast(result.message)
                 // on success the entry form closes and takes this card with it
                 status.className = `tb-status ${result.ok ? 'tb-status--ok' : 'tb-status--error'}`
