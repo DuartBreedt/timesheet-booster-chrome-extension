@@ -29,7 +29,6 @@
             ],
             "css": [
                 "content-scripts/violations.css",
-                "content-scripts/classic.min.css",
                 "content-scripts/redesign.css"
             ],
             "js": [
@@ -42,8 +41,6 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "content-scripts/jscolor.min.js",
-                "content-scripts/classic.min.css",
                 "icons/*.svg"
             ],
             "matches": ["<all_urls>"]

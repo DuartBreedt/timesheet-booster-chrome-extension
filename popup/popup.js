@@ -11,7 +11,6 @@ const accordions = [...document.getElementsByClassName('accordion')]
 let hasConnected = false
 let keywordsData = { containsKeywords: [], wordsKeywords: [] }
 
-// Open keyword accordions
 for (const accordion of accordions) {
     accordion.addEventListener('click', () => {
         accordion.classList.toggle(CLASS_ACCORDION_ACTIVE)
@@ -20,9 +19,7 @@ for (const accordion of accordions) {
     })
 }
 
-// Update text input area with currently saved keywords
 chrome.storage.sync.get(STORAGE_KEY_KEYWORDS, ({ keywords }) => {
-
     if (keywords) {
         keywordsData = keywords
     }
@@ -36,7 +33,6 @@ chrome.storage.sync.get(STORAGE_KEY_KEYWORDS, ({ keywords }) => {
     }
 })
 
-// If the user inputs a new contains keyword
 containsTextBox.addEventListener('input', () => {
     const containsKeywords = containsTextBox.value.split(/\s*(?:;|,)\s*/).filter(n => n).map(n => n.trim())
 
@@ -49,7 +45,6 @@ containsTextBox.addEventListener('input', () => {
     notifyDataChanged()
 }, false)
 
-// If the user inputs a new words keyword
 wordsTextBox.addEventListener('input', () => {
     const wordsKeywords = wordsTextBox.value.split(/\s*(?:;|,)\s*/).filter(n => n).map(n => n.trim())
 
@@ -62,21 +57,18 @@ wordsTextBox.addEventListener('input', () => {
     notifyDataChanged()
 }, false)
 
-// On next clicked, send a message to content scripts
 nextButton.addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, { action: ACTION_NEXT })
     })
 })
 
-// On prev clicked, send a message to content scripts
 prevButton.addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, { action: ACTION_PREV })
     })
 })
 
-// If a message is received from a content script with current step and next step in then update the UI to show it
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request?.currentStep && request?.maxStep) {
         sendResponse({ status: 'ok' })
@@ -92,7 +84,7 @@ function setKeywords(containsKeywords, wordsKeywords) {
     chrome.storage.sync.set({ [STORAGE_KEY_KEYWORDS]: keywordsData })
 }
 
-// Connect the popup to be able to detect whether the popup has been dismissed in the background
+// lets the background detect when the popup is dismissed
 function notifyDataChanged() {
     if (!hasConnected) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

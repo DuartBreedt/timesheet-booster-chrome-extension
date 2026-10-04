@@ -14,7 +14,6 @@
         observeLists()
     })
 
-    // Title above the item lists
     function renderHeader() {
         const projectsParent = document.querySelector(PROJECT_PARENT_SELECTOR)
         const column = projectsParent && projectsParent.closest('.span9')
@@ -37,7 +36,7 @@
                 const name = item.textContent.trim()
                 const initial = item.classList.contains('dropdown-toggle') ? '···' : getInitials(name)
                 if (item.dataset.tbInitial !== initial) item.dataset.tbInitial = initial
-                // Long names are truncated in the chips
+                // chips truncate long names
                 if (item.title !== name) item.title = name
             })
         })

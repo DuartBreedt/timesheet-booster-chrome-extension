@@ -20,7 +20,7 @@
 
             entity.parentElement.parentElement.style.setProperty('order', orderData, 'important');
 
-            // Re-selecting the same project makes knockout reuse the category nodes, which already have a pin
+            // re-selecting the same project makes knockout reuse the category nodes, which already have a pin
             const existingPin = entity.querySelector(':scope > .pin')
             if (existingPin) {
                 setPinnedState(existingPin, isPinned)
@@ -33,7 +33,6 @@
                 entity.parentElement.parentElement.style.setProperty('order', order, 'important');
                 setPinnedState(pin, isPinned)
 
-                // Update data
                 const data = {
                     project: activeProject.innerText.trim(),
                     category: {

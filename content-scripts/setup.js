@@ -12,7 +12,7 @@ function getColorFromData(project, category) {
     const projectData = data.find((dataItem) => dataItem.project == project)
     if (!projectData) return undefined
     const categoryData = projectData.categories.find((c) => c.name == category)
-    // A category can be stored without a color (e.g. it was only pinned), so fall back to the project color
+    // a category can be stored without a color (e.g. only pinned), so fall back to the project's
     if (categoryData && categoryData.color) return categoryData.color
     return projectData.color
 }
@@ -21,7 +21,7 @@ function setActiveColor(color) {
     document.documentElement.style.setProperty('--active-color', color);
 }
 
-// Knockout styles the selected project/category with `color: white`
+// knockout styles the selected project/category with `color: white`
 function isSelectedListItem(item) {
     return item.style.color == 'white' || item.style.color == 'rgb(255, 255, 255)'
 }
@@ -63,7 +63,7 @@ function clearCategoryColor(project, category) {
 
     const categoryData = projectData.categories[index]
     delete categoryData.color
-    // Nothing else worth keeping for this category, so remove it entirely
+    // nothing else worth keeping for this category
     if (!categoryData.isPinned) {
         projectData.categories.splice(index, 1)
     }
@@ -75,7 +75,6 @@ function storeData(dataItem) {
     const existingProject = data.find((item) => item.project === dataItem.project);
 
     if (existingProject) {
-
         if (!existingProject.categories) {
             existingProject.categories = [];
         }

@@ -5,7 +5,7 @@ STORAGE_KEY_DEFAULT_LOCATION = 'defaultLocation'
 
 PROJECT_PARENT_SELECTOR = "[data-bind='foreach: visibleProjects']";
 CATEGORIES_PARENT_SELECTOR = "[data-bind='foreach: visibleCategories']";
-// The "Other" overflow dropdowns are list items too, but they don't represent a single project/category
+// "other" dropdowns are list items too but don't map to a single project/category
 ITEM_SELECTOR = ".span2 .timesheetlistitem:not(.dropdown-toggle)";
 LIST_ITEM_SELECTOR = ".timesheetlistitem";
 

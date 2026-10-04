@@ -51,7 +51,6 @@
     transition: opacity 120ms ease, transform 120ms ease;
 }
 
-/* Unpinned pins lean over; pinned ones stand upright */
 .pin img {
     transform: rotate(45deg);
 }
@@ -83,7 +82,6 @@
     transform: scale(0.9);
 }
 
-/* Selected: color picker open / category pinned */
 .color-picker.is-open,
 .pin.is-pinned {
     background-color: var(--tb-color, #333);
@@ -97,10 +95,6 @@
 
 .pin.is-pinned img {
     transform: none;
-}
-
-.pickr {
-    display: none !important;
 }
 
 .active-background {

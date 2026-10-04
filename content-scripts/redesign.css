@@ -1,12 +1,4 @@
-/*
- * Timesheet Booster redesign (see redesign.png).
- * Loaded from the manifest so it applies before the page paints. Overrides Bootstrap 2 and the
- * timesheet's own styles; knockout's inline styles are not !important, so !important here wins over them.
- * Item colors come from --tb-color, set per item by projects-and-categories-render.js.
- *
- * Every selector starts with `html`: manifest CSS is injected before the page's own stylesheets, so
- * without the extra specificity the timesheet's equally specific rules would win.
- */
+/* every selector starts with html: manifest css loads before the page's own, so it needs the extra specificity */
 
 :root {
     --tb-ink: #1f2937;
@@ -23,13 +15,13 @@
     --tb-control-border: #cfd8e3;
     --tb-control-border-hover: #b9c6d8;
     --tb-track: #b4cbea;
-    /* Sentiment face colors (entry form and Bulk Edit) */
     --tb-happy: #1e8a4c;
     --tb-neutral: #b98500;
     --tb-sad: #c62828;
-    /* What item colors are tinted towards: light tints on white, dark tints on the dark surface */
+    /* tint target: light tints on white, dark tints on the dark surface */
     --tb-mix-base: #ffffff;
     --tb-chip-ink-base: #111827;
+    --tb-chip-ink-amount: 55%;
     --tb-green-ink: #1d5f27;
     --tb-toast: #1f2937;
     --tb-blue: #2b6fd8;
@@ -38,6 +30,15 @@
     --tb-green: #2f8a3a;
     --tb-green-soft: #dcefd8;
     --tb-danger: #c62828;
+    /* Accents used as text, icons and focus rings (fills above); split so dark mode can tune each for contrast */
+    --tb-blue-text: var(--tb-blue);
+    --tb-green-text: var(--tb-green);
+    --tb-danger-fill: var(--tb-danger);
+    /* Text on accent fills, and on light item colors used as fills */
+    --tb-on-accent: #ffffff;
+    --tb-on-light-item: #141a22;
+    /* Popovers, dialogs and menus that float above cards */
+    --tb-raised: #ffffff;
     --tb-radius: 10px;
     --tb-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 2px 8px rgba(16, 24, 40, 0.06);
     --tb-font: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -55,9 +56,7 @@ html .tb-icon {
     flex: none;
 }
 
-/* ---------- Header row: title + item lists | calendar ---------- */
-
-/* Replaced by the .tb-header title */
+/* replaced by the .tb-header title */
 html #nav-title {
     display: none;
 }
@@ -67,7 +66,7 @@ html .row-fluid:has(> .span9 [data-bind='foreach: visibleProjects']) {
     align-items: flex-start;
     gap: 24px;
     margin: 8px 0 28px;
-    /* Room for the timesheet's help/settings side buttons on the right edge */
+    /* room for the timesheet's help/settings side buttons */
     box-sizing: border-box;
     padding-right: 52px;
 }
@@ -119,7 +118,7 @@ html .tb-title {
 html .tb-title .tb-icon {
     width: 32px;
     height: 32px;
-    color: var(--tb-green);
+    color: var(--tb-green-text);
     stroke-width: 2.5;
 }
 
@@ -140,7 +139,7 @@ html .tb-header-button {
     min-height: 78px;
     padding: 10px 8px;
     font: 700 14px/1.2 var(--tb-font);
-    color: var(--tb-green);
+    color: var(--tb-green-ink);
     background: color-mix(in srgb, var(--tb-green) 10%, var(--tb-mix-base));
     border: 2px solid color-mix(in srgb, var(--tb-green) 55%, var(--tb-mix-base));
     border-radius: var(--tb-radius);
@@ -189,7 +188,7 @@ html .tb-settings-button:hover {
 
 html .tb-theme-toggle:focus-visible,
 html .tb-settings-button:focus-visible {
-    outline: 2px solid var(--tb-blue);
+    outline: 2px solid var(--tb-blue-text);
     outline-offset: 2px;
 }
 
@@ -217,7 +216,7 @@ html .tb-switch::after {
     left: 2px;
     width: 11px;
     height: 11px;
-    background: #fff;
+    background: var(--tb-on-accent);
     border-radius: 50%;
     transition: transform 150ms ease;
 }
@@ -230,7 +229,6 @@ html .tb-theme-toggle[aria-checked="true"] .tb-switch::after {
     transform: translateX(11px);
 }
 
-/* Manage Templates dialog */
 html .tb-dialog {
     width: min(720px, calc(100vw - 32px));
     padding: 0;
@@ -271,15 +269,13 @@ html .timesheet-sidebutton {
     background-color: var(--tb-green);
 }
 
-/* ---------- Project / category chips ---------- */
-
 html .timesheet-section > [data-bind^='foreach'] {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
 
-/* violations.css makes every div here a flex row; chips and their wrappers are plain blocks */
+/* violations.css makes every div here a flex row */
 html .timesheet-section .span2 {
     display: block;
     flex: 1 1 130px;
@@ -292,7 +288,6 @@ html .timesheet-section .span2 {
     position: relative !important;
 }
 
-/* The "Other" dropdowns always come last, after pinned and unpinned items */
 html .timesheet-section .span2:has(.dropdown-toggle) {
     order: 9999 !important;
 }
@@ -303,6 +298,8 @@ html .timesheet-section .span2 > div {
 
 html .timesheet-section .timesheetlistitem {
     --tb-item: var(--tb-color, #8a8e93);
+    /* Item color pulled towards the text color until every palette color reads at >= 4.5:1 */
+    --tb-item-ink: color-mix(in srgb, var(--tb-item) var(--tb-chip-ink-amount), var(--tb-chip-ink-base));
     position: relative;
     display: block;
     box-sizing: border-box;
@@ -315,7 +312,7 @@ html .timesheet-section .timesheetlistitem {
     font: 600 13px/42px var(--tb-font);
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: color-mix(in srgb, var(--tb-item) 75%, var(--tb-chip-ink-base)) !important;
+    color: var(--tb-item-ink) !important;
     background-color: color-mix(in srgb, var(--tb-item) 10%, var(--tb-mix-base)) !important;
     border: 1px solid color-mix(in srgb, var(--tb-item) 28%, var(--tb-mix-base)) !important;
     border-radius: var(--tb-radius) !important;
@@ -328,7 +325,7 @@ html .timesheet-section .timesheetlistitem:hover {
     box-shadow: 0 2px 6px rgba(16, 24, 40, 0.1);
 }
 
-/* Avatar with the item's initials (set as data-tb-initial by redesign-render.js) */
+/* initials come from data-tb-initial, set by redesign-render.js */
 html .timesheet-section .timesheetlistitem::before {
     content: attr(data-tb-initial);
     position: absolute;
@@ -340,20 +337,20 @@ html .timesheet-section .timesheetlistitem::before {
     font: 700 10px/26px var(--tb-font);
     text-align: center;
     letter-spacing: 0.02em;
-    color: var(--tb-item);
+    color: var(--tb-item-ink);
     background: color-mix(in srgb, var(--tb-item) 20%, var(--tb-mix-base));
     border-radius: 50%;
 }
 
 html .timesheet-section .timesheetlistitem.tb-active {
-    color: #fff !important;
+    color: var(--tb-on-item, var(--tb-on-accent)) !important;
     background-color: var(--tb-item) !important;
     border-color: var(--tb-item) !important;
     box-shadow: 0 2px 8px color-mix(in srgb, var(--tb-item) 45%, transparent);
 }
 
 html .timesheet-section .timesheetlistitem.tb-active::before {
-    color: #fff;
+    color: var(--tb-on-item, var(--tb-on-accent));
     background: rgba(255, 255, 255, 0.25);
 }
 
@@ -386,7 +383,6 @@ html .timesheet-section .dropdown-menu a {
     font-size: 13px;
 }
 
-/* Pin and fill buttons: only shown on hover/focus, except while pinned or while the picker is open */
 html .timesheet-section .timesheetlistitem .color-picker,
 html .timesheet-section .timesheetlistitem .pin {
     width: 20px;
@@ -411,8 +407,6 @@ html .timesheet-section .timesheetlistitem .pin.is-pinned,
 html .timesheet-section .timesheetlistitem .color-picker.is-open {
     opacity: 1;
 }
-
-/* ---------- Calendar ---------- */
 
 html #datepicker .datepicker-inline {
     width: auto;
@@ -482,19 +476,17 @@ html #datepicker .datepicker-days .day.inrange {
 
 html #datepicker .datepicker td.today {
     background: none;
-    box-shadow: inset 0 0 0 2px var(--tb-green);
+    box-shadow: inset 0 0 0 2px var(--tb-green-text);
 }
 
 html #datepicker .datepicker table tr td.active,
 html #datepicker .datepicker table tr td.active:hover {
-    color: #fff;
+    color: var(--tb-on-accent);
     text-shadow: none;
     background: var(--tb-green);
     background-image: none;
     border-radius: 6px;
 }
-
-/* ---------- Day timelines ---------- */
 
 html .timeEntry {
     margin-bottom: 20px;
@@ -555,7 +547,6 @@ html .timeEntry-capturedTimeAction {
     align-items: center;
 }
 
-/* Quarter-hour ticks, stronger on the hour and at 8 hours */
 html .timeEntry-quaterhour {
     background-image: linear-gradient(to left, rgba(255, 255, 255, 0.22) 1px, transparent 1px);
     background-size: 100% 35%;
@@ -576,10 +567,7 @@ html .timeEntry-arrow-up {
     border-bottom-color: var(--tb-panel);
 }
 
-/* ---------- Open entry: Quick Actions | form | OR | Templates ----------
- * The container's data-tb-view picks what is shown next to Quick Actions:
- * "form" (entry form + templates) or "bulk" (Bulk Edit Day).
- */
+/* data-tb-view picks what sits next to quick actions: "form" or "bulk" */
 
 html .timeEntry-container {
     margin-top: 2px;
@@ -645,7 +633,7 @@ html .tb-quick-heading {
 }
 
 html .tb-quick-heading .tb-icon {
-    color: var(--tb-blue);
+    color: var(--tb-blue-text);
     fill: currentColor;
 }
 
@@ -657,7 +645,7 @@ html .tb-action {
     margin-top: 10px;
     padding: 12px 16px;
     text-align: left;
-    color: #fff;
+    color: var(--tb-on-accent);
     border: 0;
     border-radius: 8px;
     cursor: pointer;
@@ -682,7 +670,7 @@ html .tb-action:focus-visible {
 
 html .tb-action--bulk[aria-pressed="true"],
 html .tb-action--bulk:focus-visible {
-    box-shadow: 0 0 0 3px var(--tb-surface), 0 0 0 5px var(--tb-blue);
+    box-shadow: 0 0 0 3px var(--tb-surface), 0 0 0 5px var(--tb-blue-text);
 }
 
 html .tb-action-icon .tb-icon {
@@ -797,13 +785,13 @@ html .tb-choice:hover {
 }
 
 html .tb-choice:focus-visible {
-    outline: 2px solid var(--tb-blue);
+    outline: 2px solid var(--tb-blue-text);
     outline-offset: 2px;
 }
 
 html .tb-locations .tb-choice[aria-pressed="true"],
 html .tb-locations .tb-choice[aria-checked="true"] {
-    color: #fff;
+    color: var(--tb-on-accent);
     background: var(--tb-blue);
     border-color: var(--tb-blue);
 }
@@ -846,7 +834,7 @@ html .tb-button:hover {
 }
 
 html .tb-button--primary {
-    color: #fff;
+    color: var(--tb-on-accent);
     background: var(--tb-blue);
     border-color: var(--tb-blue);
 }
@@ -860,7 +848,7 @@ html .tb-button:active {
 }
 
 html .tb-button:focus-visible {
-    outline: 2px solid var(--tb-blue);
+    outline: 2px solid var(--tb-blue-text);
     outline-offset: 2px;
 }
 
@@ -881,16 +869,15 @@ html .tb-status:empty {
 }
 
 html .tb-status--ok {
-    color: var(--tb-green);
+    color: var(--tb-green-text);
 }
 
 html .tb-status--error {
     color: var(--tb-danger);
 }
 
-/* Templates */
 html .tb-template-select:focus-visible {
-    outline: 2px solid var(--tb-blue);
+    outline: 2px solid var(--tb-blue-text);
     outline-offset: 2px;
 }
 
@@ -937,13 +924,13 @@ html .tb-template:hover {
 }
 
 html .tb-template:focus-visible {
-    outline: 2px solid var(--tb-blue);
+    outline: 2px solid var(--tb-blue-text);
     outline-offset: -2px;
 }
 
 html .tb-template[aria-selected="true"] {
     background: color-mix(in srgb, var(--tb-blue) 10%, var(--tb-mix-base));
-    box-shadow: inset 3px 0 var(--tb-blue);
+    box-shadow: inset 3px 0 var(--tb-blue-text);
 }
 
 html .tb-template-avatar {
@@ -982,7 +969,6 @@ html .tb-template-text small {
     color: var(--tb-muted);
 }
 
-/* Manage Templates rows: no selection, explicit actions */
 html .tb-manage .tb-template {
     cursor: default;
 }
@@ -1013,7 +999,7 @@ html .tb-small-button:hover {
 }
 
 html .tb-small-button:focus-visible {
-    outline: 2px solid var(--tb-blue);
+    outline: 2px solid var(--tb-blue-text);
     outline-offset: 1px;
 }
 
@@ -1036,8 +1022,6 @@ html .tb-empty {
     border-radius: 8px;
 }
 
-/* ---------- The timesheet's own entry form, restyled as a card ---------- */
-
 html .timeEntry-container .timeEntry-content {
     width: auto;
     margin: 0;
@@ -1047,12 +1031,11 @@ html .timeEntry-container:not(.tb-has-quick) .timeEntry-content {
     margin: 16px;
 }
 
-/* Entry form: description | ticket + time | sentiment + billable, then Worked From and Save as template rows */
 html .timeEntry-container .timeEntry-content {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    /* The card stretches to the Templates card's height; keep the rows packed at the top */
+    /* the card stretches to match templates, keep rows packed at the top */
     align-content: flex-start;
     column-gap: 20px;
     row-gap: 14px;
@@ -1072,7 +1055,7 @@ html .timeEntry-content-input-block {
     margin: 0;
 }
 
-/* The timesheet pads Worked From with inline styles and a trailing <br> */
+/* the timesheet pads worked from with inline styles and a trailing <br> */
 html .timeEntry-content-input-block:has([data-bind="foreach: locations"]) {
     padding-top: 0 !important;
 }
@@ -1125,23 +1108,64 @@ html .timeEntry-content .timeEntry-input.tiny {
 }
 
 html .timeEntry-content .timeEntry-input:focus {
-    border-color: var(--tb-blue);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tb-blue) 20%, transparent);
+    border-color: var(--tb-blue-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tb-blue-text) 20%, transparent);
 }
 
+/* grouped into one row by quick-actions-render.js */
+html .timeEntry-content > .tb-form-buttons {
+    display: flex;
+    flex-basis: 100%;
+    gap: 12px;
+}
+
+html .tb-form-buttons .timeEntry-content-buttons {
+    float: none;
+    margin: 0;
+}
+
+/* the timesheet squares these off with .noborder and fixed widths */
 html .timeEntry-content .btn.btn-flat {
-    min-width: 96px;
-    height: 38px;
-    font-weight: 700;
-    border-radius: 8px;
+    width: auto;
+    min-width: 150px;
+    height: 42px;
+    padding: 0 20px;
+    font: 700 14px var(--tb-font);
+    text-shadow: none;
+    border-radius: 8px !important;
+    transition: background-color 120ms ease, transform 80ms ease;
+}
+
+html .timeEntry-content .btn.btn-flat:active {
+    transform: scale(0.98);
+}
+
+html .timeEntry-content .btn.btn-flat:focus-visible {
+    outline: 2px solid var(--tb-blue-text);
+    outline-offset: 2px;
 }
 
 html .timeEntry-content .btn.btn-primary.save {
+    color: var(--tb-on-accent);
     background: var(--tb-blue);
 }
 
+html .timeEntry-content .btn.btn-primary.save:hover {
+    background: var(--tb-blue-dark);
+}
+
+html .timeEntry-content .btn.btn-primary.save[disabled] {
+    opacity: 0.5;
+}
+
 html .timeEntry-content .btn.btn-flat.cancel {
+    color: var(--tb-ink);
+    background: var(--tb-surface);
     border: 1px solid var(--tb-control-border);
+}
+
+html .timeEntry-content .btn.btn-flat.cancel:hover {
+    background: var(--tb-hover);
 }
 
 html .timeEntry-content .textcheckbox {
@@ -1150,7 +1174,7 @@ html .timeEntry-content .textcheckbox {
     border-radius: 8px;
 }
 
-/* Sentiment: the timesheet's dark PNG faces are replaced with outline faces in the theme's colors */
+/* swap the timesheet's dark png faces for outline faces in theme colors */
 html .timeEntry-content .sentiment-button {
     position: relative;
     width: 40px;
@@ -1199,7 +1223,6 @@ html .timeEntry-content .sentiment-button.active {
     border: 2px solid currentColor;
 }
 
-/* Worked From: pills that behave like radios, with a tick on the selected one */
 html .timeEntry-radio-group {
     position: relative;
     display: inline-flex;
@@ -1222,7 +1245,7 @@ html .timeEntry-radio-group:hover {
     border-color: var(--tb-control-border-hover);
 }
 
-/* Still focusable and arrow-key operable, just not visible */
+/* still focusable and arrow-key operable, just hidden */
 html .timeEntry-radio-group input[type="radio"] {
     position: absolute;
     width: 1px;
@@ -1234,7 +1257,7 @@ html .timeEntry-radio-group input[type="radio"] {
 
 html .timeEntry-radio-group:has(input:checked) {
     padding-left: 11px;
-    color: #fff;
+    color: var(--tb-on-accent);
     background-color: var(--tb-blue);
     border-color: var(--tb-blue);
 }
@@ -1249,7 +1272,7 @@ html .timeEntry-radio-group:has(input:checked)::before {
 }
 
 html .timeEntry-radio-group:has(input:focus-visible) {
-    outline: 2px solid var(--tb-blue);
+    outline: 2px solid var(--tb-blue-text);
     outline-offset: 2px;
 }
 
@@ -1305,38 +1328,196 @@ html .tb-save-template-name[hidden] {
     }
 }
 
-/* ---------- Dark mode (html.tb-dark, toggled from the header and saved by theme.js) ---------- */
+html .tb-swatches {
+    position: absolute;
+    z-index: 10000;
+    box-sizing: border-box;
+    width: 236px;
+    padding: 12px;
+    background: var(--tb-surface);
+    border: 1px solid var(--tb-card-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.18);
+}
 
+html .tb-swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 28px);
+    gap: 8px;
+}
+
+html .tb-swatch {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: var(--tb-swatch);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 80ms ease, box-shadow 120ms ease;
+}
+
+html .tb-swatch:hover {
+    transform: scale(1.12);
+}
+
+html .tb-swatch:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--tb-surface), 0 0 0 4px var(--tb-blue-text);
+}
+
+html .tb-swatch[aria-pressed="true"] {
+    box-shadow: 0 0 0 2px var(--tb-surface), 0 0 0 4px var(--tb-swatch);
+}
+
+html .tb-swatch[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 14px;
+    height: 14px;
+    margin: auto;
+    background-color: var(--tb-on-accent);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+html .tb-swatches-project {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 36px;
+    margin-bottom: 12px;
+    padding: 0 10px;
+    font: 600 12.5px var(--tb-font);
+    text-align: left;
+    color: var(--tb-ink);
+    background: var(--tb-surface);
+    border: 1px solid var(--tb-control-border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+html .tb-swatches-project::before {
+    content: "";
+    flex: none;
+    width: 18px;
+    height: 18px;
+    background: var(--tb-swatch);
+    border-radius: 50%;
+}
+
+html .tb-swatches-project:hover {
+    background: var(--tb-hover);
+}
+
+html .tb-swatches-project:focus-visible {
+    outline: 2px solid var(--tb-blue-text);
+    outline-offset: 2px;
+}
+
+html .tb-swatches-project[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--tb-blue) 8%, var(--tb-surface));
+    border-color: var(--tb-blue-text);
+}
+
+html .tb-swatches-project[aria-pressed="true"]::after {
+    content: "";
+    width: 14px;
+    height: 14px;
+    margin-left: auto;
+    background-color: var(--tb-blue-text);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* html.tb-dark is toggled from the header and persisted by theme.js */
+
+/*
+ * Dark blue-gray rather than black, and off-white rather than white text. Elevation is shown with
+ * progressively lighter surfaces (page < panel < card < inputs/hover < raised), not shadows.
+ * Accents are ~25% desaturated; fills are dark enough for off-white text (>= 4.5:1) and the *-text
+ * variants light enough to read on cards (>= 4.5:1).
+ */
 html.tb-dark {
     color-scheme: dark;
-    --tb-ink: #e2e8f0;
-    --tb-ink-soft: #cbd5e1;
-    --tb-muted: #94a3b8;
-    --tb-faint: #64748b;
-    --tb-line: #243552;
-    --tb-page: #0b1220;
-    --tb-surface: #121d31;
-    --tb-subtle: #0f192b;
-    --tb-hover: #1a2942;
-    --tb-panel: #0e1828;
-    --tb-card-border: #22324d;
-    --tb-control-border: #2c3f5f;
-    --tb-control-border-hover: #3d5580;
-    --tb-track: #213b63;
-    --tb-happy: #4ade80;
-    --tb-neutral: #fbbf24;
-    --tb-sad: #f87171;
-    --tb-blue: #3b82f6;
-    --tb-blue-dark: #2563eb;
-    --tb-purple: #7c5ce0;
-    --tb-green: #3fa654;
-    --tb-green-soft: #163626;
-    --tb-green-ink: #9fdcaa;
-    --tb-danger: #f87171;
-    --tb-mix-base: #121d31;
-    --tb-chip-ink-base: #ffffff;
-    --tb-toast: #1e3a8a;
-    --tb-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+    --tb-ink: #e3e7ed;
+    --tb-ink-soft: #c5cdd8;
+    --tb-muted: #a0abbb;
+    --tb-faint: #8893a5;
+    --tb-line: #2b3646;
+    --tb-page: #121820;
+    --tb-panel: #18202b;
+    --tb-surface: #1e2734;
+    --tb-subtle: #232d3b;
+    --tb-hover: #2a3546;
+    --tb-raised: #26303f;
+    --tb-card-border: #2c3748;
+    --tb-control-border: #3a475b;
+    --tb-control-border-hover: #4d5c73;
+    --tb-track: #233651;
+    --tb-happy: #5dcb85;
+    --tb-neutral: #e0b33f;
+    --tb-sad: #e78282;
+    --tb-blue: #2768d2;
+    --tb-blue-dark: #2160c4;
+    --tb-blue-text: #5d8fe1;
+    --tb-purple: #7459c9;
+    --tb-green: #3c7948;
+    --tb-green-text: #4fa060;
+    --tb-green-soft: #1f3a2a;
+    --tb-green-ink: #a9d6b1;
+    --tb-danger: #e78282;
+    --tb-danger-fill: #cf2727;
+    --tb-on-accent: #eef1f5;
+    --tb-mix-base: #1e2734;
+    --tb-chip-ink-base: #eef1f5;
+    --tb-chip-ink-amount: 50%;
+    --tb-toast: #2a3546;
+    --tb-shadow: none;
+}
+
+/* Raised layers: lighter than the cards they float over */
+html.tb-dark .tb-dialog .tb-card,
+html.tb-dark .tb-swatches,
+html.tb-dark .timeEntry-tooltip,
+html.tb-dark .timesheet-section .dropdown-menu {
+    color: var(--tb-ink);
+    background: var(--tb-raised);
+    border-color: var(--tb-control-border);
+    box-shadow: none;
+}
+
+html.tb-dark .tb-toast {
+    border: 1px solid var(--tb-control-border);
+    box-shadow: none;
+}
+
+/* The navigation bar sits above the page, so it is a step lighter */
+html.tb-dark .navbar-inner {
+    background: #1b2330;
+    background-image: none;
+    border-bottom: 1px solid var(--tb-line);
+}
+
+/* Project colors are muted mid-tones already; ease them a little more on the dark background */
+html.tb-dark .timeEntry-entry,
+html.tb-dark .timeEntry-banner,
+html.tb-dark .timesheet-section .timesheetlistitem.tb-active {
+    filter: saturate(0.8);
+}
+
+/* The timesheet's own white text on colored bars and buttons */
+html.tb-dark .timeEntry-capturedTime,
+html.tb-dark .timeEntry-banner,
+html.tb-dark .textcheckbox {
+    color: var(--tb-on-accent);
+}
+
+html.tb-dark .timeEntry-content .textcheckbox {
+    background-color: var(--tb-blue);
 }
 
 html.tb-dark body,
@@ -1345,7 +1526,6 @@ html.tb-dark .container-fluid {
     background: var(--tb-page);
 }
 
-/* The timesheet's own controls inside the entry form */
 html.tb-dark .timeEntry-content .timeEntry-input,
 html.tb-dark .tb-save-template-name[type="text"] {
     color: var(--tb-ink);
@@ -1357,24 +1537,6 @@ html.tb-dark .timeEntry-content-label,
 html.tb-dark .timeEntry-label,
 html.tb-dark .char-counter {
     color: var(--tb-ink-soft);
-}
-
-html.tb-dark .timeEntry-content .btn.btn-flat.cancel {
-    color: var(--tb-ink);
-    background: var(--tb-surface);
-    border-color: var(--tb-control-border);
-    text-shadow: none;
-}
-
-html.tb-dark .timeEntry-tooltip {
-    color: var(--tb-ink);
-    background: var(--tb-surface);
-    border-color: var(--tb-card-border);
-}
-
-html.tb-dark .timesheet-section .dropdown-menu {
-    background: var(--tb-surface);
-    border-color: var(--tb-card-border);
 }
 
 html.tb-dark .timesheet-section .dropdown-menu a {
@@ -1398,7 +1560,6 @@ html.tb-dark #datepicker .datepicker .datepicker-switch:hover {
     background: var(--tb-hover);
 }
 
-/* Pin and fill buttons (violations.css) */
 html.tb-dark .color-picker,
 html.tb-dark .pin {
     background-color: var(--tb-surface);
@@ -1410,8 +1571,6 @@ html.tb-dark .pin:not(.is-pinned) img {
     filter: invert(1);
 }
 
-/* ---------- Toast ---------- */
-
 html .tb-toast {
     position: fixed;
     right: 24px;
@@ -1420,7 +1579,7 @@ html .tb-toast {
     max-width: 360px;
     padding: 12px 16px;
     font: 600 14px var(--tb-font);
-    color: #fff;
+    color: var(--tb-on-accent);
     background: var(--tb-toast);
     border-radius: 10px;
     box-shadow: 0 8px 24px rgba(16, 24, 40, 0.25);
@@ -1428,7 +1587,7 @@ html .tb-toast {
 }
 
 html .tb-toast--error {
-    background: var(--tb-danger);
+    background: var(--tb-danger-fill);
 }
 
 html .tb-toast--leaving {
@@ -1444,6 +1603,7 @@ html .tb-toast--leaving {
     html .tb-switch,
     html .tb-switch::after,
     html .tb-choice,
+    html .tb-swatch,
     html .timesheet-section .timesheetlistitem {
         transition: none;
     }

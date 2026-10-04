@@ -6,7 +6,7 @@
     }
     window.__QUICK_ACTIONS_RENDER_SCRIPT_ALREADY_RUN__ = true;
 
-    // Ids match the timesheet's own values
+    // ids match the timesheet's own values
     const LOCATIONS = [
         { id: 2, name: 'Home', icon: 'home' },
         { id: 3, name: 'Entelect', icon: 'building' },
@@ -19,12 +19,12 @@
         { id: 3, name: 'Sad', icon: 'frown', buttonClass: 'sentiment-sad' }
     ];
 
-    // What an open entry shows next to Quick Actions (see redesign.css)
+    // see redesign.css
     const VIEW_FORM = 'form';
     const VIEW_BULK = 'bulk';
 
     let templates = [];
-    // Office pre-selected in new entries (Home until changed in Settings)
+    // home until changed in settings
     const DEFAULT_LOCATION_ID = 2;
     let defaultLocationId = DEFAULT_LOCATION_ID;
     const pendingCommands = new Map();
@@ -44,8 +44,6 @@
             }
         })
     })
-
-    // ---------- Helpers ----------
 
     function el(tag, attrs = {}, children = []) {
         const node = document.createElement(tag)
@@ -91,9 +89,7 @@
         resolve(result)
     }
 
-    // ---------- Templates storage ----------
-
-    // Local rather than sync storage: descriptions can push a template list past sync's 8KB per-item quota
+    // local not sync: descriptions can push templates past sync's 8kb per-item quota
     function loadTemplates() {
         chrome.storage.local.get(STORAGE_KEY_TEMPLATES, (stored) => {
             templates = stored[STORAGE_KEY_TEMPLATES] || []
@@ -143,7 +139,6 @@
         return [template.projectName, formatDuration(template.durationInHours), location && location.name].filter(Boolean).join(' • ')
     }
 
-    // Avatar, title and details shared by the template lists
     function templateSummary(template) {
         const color = getColorFromData(template.projectName, template.categoryName) || '#8A8E93'
         return [
@@ -155,8 +150,6 @@
         ]
     }
 
-    // ---------- Entry forms ----------
-
     function observeForms() {
         new MutationObserver((mutations) => {
             mutations.forEach((mutation) => enhanceForm(mutation.target))
@@ -165,8 +158,7 @@
         document.querySelectorAll('.timeEntry-container[data-tb-mode]').forEach(enhanceForm)
     }
 
-    // Lays an open entry out as: Quick Actions | entry form | OR | Templates.
-    // Bulk Edit Day replaces everything right of Quick Actions while open.
+    // bulk edit day replaces everything right of quick actions while open
     function enhanceForm(container) {
         if (!container.dataset.tbMode || container.querySelector('.tb-quick')) return;
 
@@ -197,14 +189,26 @@
         container.classList.add('tb-has-quick')
         container.dataset.tbView = VIEW_FORM
 
+        const content = container.querySelector('.timeEntry-content')
         if (container.dataset.tbMode === 'new') {
-            const content = container.querySelector('.timeEntry-content')
             if (content) content.append(buildSaveTemplateRow())
             applyDefaultLocation(container)
         }
+        if (content) groupFormButtons(content)
     }
 
-    // Selects the configured office the way a user would, so the form's own bindings pick it up
+    // moving the elements keeps their knockout click bindings
+    function groupFormButtons(content) {
+        const save = content.querySelector('.timeEntry-content-buttons .save')
+        const cancel = content.querySelector('.timeEntry-content-buttons .cancel')
+        if (!save || !cancel) return;
+        content.append(el('div', { class: 'tb-form-buttons' }, [
+            save.closest('.timeEntry-content-buttons'),
+            cancel.closest('.timeEntry-content-buttons')
+        ]))
+    }
+
+    // select it like a user would so the form's bindings pick it up
     function applyDefaultLocation(container) {
         const radio = container.querySelector(`input[type="radio"][value="${defaultLocationId}"]`)
         if (radio && !radio.checked) radio.click()
@@ -273,9 +277,7 @@
         ])
     }
 
-    // ---------- Bulk Edit Day ----------
-
-    // A group of toggle buttons where clicking the selected one clears it (fields are optional)
+    // clicking the selected one clears it since fields are optional
     function buildChoiceGroup(className, label, options, onChange) {
         let value
         const showNames = className === 'tb-locations'
@@ -342,7 +344,7 @@
             status
         ])
 
-        // Start from what the open entry form has selected
+        // start from what the open entry form has selected
         card.tbPrefill = () => {
             status.textContent = ''
             const form = day.querySelector('.timeEntry-content')
@@ -355,9 +357,6 @@
         return card
     }
 
-    // ---------- Templates (apply) ----------
-
-    // Re-renders a template card from `templates`, keeping its selection
     function renderTemplateCard(card) {
         const day = card.tbDay
         let selectedId = templates.some((t) => t.id === card.dataset.tbSelected) ? card.dataset.tbSelected : ''
@@ -384,7 +383,7 @@
                 status.textContent = 'Adding entry…'
                 const result = await sendCommand({ type: 'applyTemplate', date: day.dataset.tbDate, template })
                 if (result.ok) toast(result.message)
-                // On success the entry form closes and takes this card with it
+                // on success the entry form closes and takes this card with it
                 status.className = `tb-status ${result.ok ? 'tb-status--ok' : 'tb-status--error'}`
                 status.textContent = result.message
                 card.tbRefreshTotal()
@@ -432,9 +431,7 @@
         setSelected(selectedId)
     }
 
-    // ---------- Manage Templates ----------
-
-    // Next to the calendar; opens the template list in a dialog since templates aren't tied to a day
+    // templates aren't tied to a day, so they're managed from a dialog
     function renderHeaderActions() {
         const projectsParent = document.querySelector(PROJECT_PARENT_SELECTOR)
         const column = projectsParent && projectsParent.closest('.span9')
@@ -460,7 +457,7 @@
         ]))
     }
 
-    // theme.js applies the saved choice on load; this only flips and saves it
+    // theme.js applies the saved choice on load, this only flips and saves it
     function buildThemeToggle() {
         const toggle = el('button', {
             type: 'button',
@@ -480,28 +477,25 @@
             toggle.innerHTML = `${tbIcon(dark ? 'sun' : 'moon')}<span>Dark mode</span><span class="tb-switch" aria-hidden="true"></span>`
         }
 
-        // Also follows changes made in another tab
+        // also follows changes made in another tab
         new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
         sync()
         return toggle
     }
 
-    // Modal dialog holding a single card (.tb-<name>), created on first use
+    // created on first use
     function openDialog(name, label, render) {
         let dialog = document.querySelector(`.tb-dialog[data-tb-dialog="${name}"]`)
         if (!dialog) {
             const card = el('div', { class: `tb-card tb-${name}` })
             dialog = el('dialog', { class: 'tb-dialog', 'data-tb-dialog': name, 'aria-label': label }, [card])
             card.tbClose = () => dialog.close()
-            // Clicking the backdrop closes it
             dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close() })
             document.body.append(dialog)
         }
         render(dialog.firstElementChild)
         dialog.showModal()
     }
-
-    // ---------- Settings ----------
 
     function loadSettings() {
         chrome.storage.sync.get(STORAGE_KEY_DEFAULT_LOCATION, (stored) => {

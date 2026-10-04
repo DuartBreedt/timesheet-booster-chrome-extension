@@ -8,7 +8,7 @@
 
     const TIME_ENTRY_SELECTOR = ".timeEntry-quaterhour";
     const ENTIRE_ENTRY_SELECTOR = ".timeEntry-entry";
-    // Tagged with data-tb-project/data-tb-category by entry-metadata-bridge.js
+    // tagged by entry-metadata-bridge.js
     const CAPTURED_TIME_SELECTOR = ".timeEntry-capturedTime[data-tb-category]";
 
     onDataLoaded.push(() => {
@@ -28,7 +28,7 @@
 
         const entireEntry = timeEntry.parentElement
 
-        // If an entry is being captured don't handle mouseover
+        // an open .timeEntry-container means the entry is being captured
         if (entireEntry.parentElement.querySelector('.timeEntry-container')) return;
 
         const timeEntries = entireEntry.querySelectorAll(TIME_ENTRY_SELECTOR);
@@ -46,13 +46,13 @@
 
     function handleEntryMouseOut(event) {
         const entireEntry = event.target.closest(ENTIRE_ENTRY_SELECTOR)
-        // Only act when the pointer actually leaves the entry, i.e. mouseleave semantics
+        // mouseleave semantics on a delegated mouseout
         if (!entireEntry || entireEntry.contains(event.relatedTarget)) return;
         restoreAllOriginalColors(entireEntry)
     }
 
     function restoreAllOriginalColors(entireEntry) {
-        // If an entry is being captured don't restore colors on mouseleave
+        // keep the highlight while the entry is being captured
         if (!entireEntry.parentElement.querySelector('.timeEntry-container')) {
             entireEntry.querySelectorAll(TIME_ENTRY_SELECTOR).forEach(timeEntries => {
                 timeEntries.classList.remove('active-background')
@@ -68,12 +68,12 @@
     }
 
     function setupEventListeners() {
-        // Delegated so entries rendered later (week navigation, added/removed entries) are covered too
+        // delegated so entries rendered later (week nav, added/removed entries) are covered
         document.addEventListener('mouseover', handleTimeEntryMouseOver);
         document.addEventListener('mouseout', handleEntryMouseOut);
         document.addEventListener('click', handleEntryClicked);
 
-        // The bridge tags captured times after the timesheet (re)renders them
+        // the bridge tags captured times after the timesheet re-renders them
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => styleCapturedEntry(mutation.target))
         });
@@ -94,7 +94,7 @@
         const category = capturedTime.dataset.tbCategory
         if (project === undefined || category === undefined) return;
 
-        // Remember the timesheet's own color so it can be restored once no custom color applies
+        // remember the timesheet's own color so it can be restored later
         if (capturedTime.dataset.tbOriginalColor === undefined) {
             capturedTime.dataset.tbOriginalColor = capturedTime.style.backgroundColor
         }

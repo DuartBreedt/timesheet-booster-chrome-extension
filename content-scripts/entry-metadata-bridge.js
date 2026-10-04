@@ -1,7 +1,4 @@
-// Runs in the page's MAIN world (not the extension's isolated world) so it can reach the
-// tooltipster instance the timesheet attaches to every captured time. It copies the project
-// and category out of that tooltip into data attributes, which the isolated content scripts
-// can then read straight from the DOM without simulating hovers.
+// main world so it can read the tooltipster instance on each captured time
 (function () {
     'use strict';
 
@@ -20,17 +17,17 @@
             const $capturedTime = $(capturedTime);
             if (!$capturedTime.data('tooltipster-ns')) return;
 
-            // Tooltip content is: Project, Category, Time, ... each as <strong>Label</strong><span>Value</span>
+            // tooltip content is <strong>Label</strong><span>Value</span> pairs: project, category, time, ...
             const values = $($capturedTime.tooltipster('content')).find('span');
             if (values.length < 2) return;
 
-            // Category is set last because the isolated world observes it as the "ready" signal
+            // category goes last since the isolated world treats it as the ready signal
             capturedTime.dataset.tbProject = values.eq(0).text();
             capturedTime.dataset.tbCategory = values.eq(1).text();
         });
     }
 
-    // Captured times are rebuilt whenever the week changes or an entry is added/edited/removed
+    // captured times are rebuilt on week change and entry add/edit/remove
     new MutationObserver(tagCapturedTimes).observe(document.body, { childList: true, subtree: true });
     tagCapturedTimes();
 })();

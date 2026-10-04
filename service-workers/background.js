@@ -2,7 +2,7 @@ const baseSetupFiles = [
     "constants.js",
     "content-scripts/setup.js",
     "content-scripts/icons.js",
-    "content-scripts/jscolor.min.js",
+    "content-scripts/palette.js",
     "content-scripts/projects-and-categories-render.js",
     "content-scripts/entry-render.js",
     "content-scripts/category-pinning-render.js",
@@ -11,7 +11,7 @@ const baseSetupFiles = [
     "content-scripts/main.js"
 ]
 
-// Need the page's own jQuery, tooltipster and timesheet widgets, so they run in the MAIN world instead of the isolated one
+// these need the page's own jquery, tooltipster and timesheet widgets
 const mainWorldSetupFiles = [
     "content-scripts/entry-metadata-bridge.js",
     "content-scripts/day-actions-bridge.js"
@@ -27,7 +27,6 @@ const dyanmicFetchUrls = [
     'https://employee.entelect.co.za/Timesheet/GetEmployeeProjectVisibility'
 ]
 
-// Violation count for badge indicator from render.js
 async function onMessageCallback(request, sender, sendResponse) {
     if (request?.badge == 0 || request?.badge) {
         sendResponse({ status: 'ok' })
@@ -44,7 +43,6 @@ async function setupPage(tabId) {
     refreshPage(mainWorldSetupFiles, tabId, 'MAIN')
 }
 
-// Refresh UI with markup
 async function refreshPage(files, tabId = undefined, world = 'ISOLATED') {
     if (!tabId) {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })

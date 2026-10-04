@@ -1,0 +1,27 @@
+// includes the timesheet's 12 defaults (see getColor in its site script), the rest are muted to match
+TB_PALETTE = [
+    { name: 'Brick', hex: '#994748' },
+    { name: 'Terracotta', hex: '#c05d53' },
+    { name: 'Rust', hex: '#9a6c47' },
+    { name: 'Apricot', hex: '#eca65e' },
+    { name: 'Sand', hex: '#cab072' },
+    { name: 'Olive', hex: '#999847' },
+    { name: 'Moss', hex: '#719947' },
+    { name: 'Sage', hex: '#7cb677' },
+    { name: 'Forest', hex: '#479a69' },
+    { name: 'Pine', hex: '#2c5e4d' },
+    { name: 'Deep teal', hex: '#00796b' },
+    { name: 'Teal', hex: '#479a97' },
+    { name: 'Sky', hex: '#72adb9' },
+    { name: 'Steel blue', hex: '#477199' },
+    { name: 'Navy', hex: '#2f4a65' },
+    { name: 'Periwinkle', hex: '#7e95c8' },
+    { name: 'Indigo', hex: '#474899' },
+    { name: 'Lavender', hex: '#897eb1' },
+    { name: 'Violet', hex: '#6d479a' },
+    { name: 'Plum', hex: '#97479a' },
+    { name: 'Mulberry', hex: '#994771' },
+    { name: 'Rose', hex: '#c57791' },
+    { name: 'Wine', hex: '#652f3d' },
+    { name: 'Slate', hex: '#8a8e93' }
+]

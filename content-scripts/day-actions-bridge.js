@@ -1,11 +1,4 @@
-// Runs in the page's MAIN world so it can drive the timesheet's own day widgets ($.fn.timeEntry) and post
-// through the page's jQuery exactly like the timesheet does. The isolated content scripts talk to it with
-// DOM events carrying JSON strings:
-//   tb:command          isolated -> page   { id, type: 'bulkEdit' | 'applyTemplate', date, ... }
-//   tb:result           page -> isolated   { id, ok, message }
-//   tb:template-captured page -> isolated  { name, entry }
-// It also tags the DOM so the isolated world knows what it is looking at:
-//   .timeEntry[data-tb-date="YYYY-MM-DD"] and .timeEntry-container[data-tb-mode="new" | "edit"]
+// main world so it can drive the timesheet's own $.fn.timeEntry widgets and jquery
 (function () {
     'use strict';
 
@@ -15,14 +8,14 @@
     window.__DAY_ACTIONS_BRIDGE_ALREADY_RUN__ = true;
 
     const LOCATION_HOME = 2;
-    // Mirrors the options the timesheet's own entry form posts
+    // mirrors the options the timesheet's own entry form posts
     const LOCATIONS = [
         { name: "Home", value: 2 },
         { name: "Entelect", value: 3 },
         { name: "Client", value: 4 },
         { name: "Other", value: 5 }
     ];
-    // Sentiment widget buttons by id (see $.custom.sentiment)
+    // see $.custom.sentiment
     const SENTIMENT_BUTTON_CLASSES = { 1: 'sentiment-neutral', 2: 'sentiment-happy', 3: 'sentiment-sad' };
 
     function getWidget(timeEntryElement) {
@@ -61,8 +54,7 @@
         });
     }
 
-    // The isolated world adds a "Save as template" toggle to new-entry forms; when it is ticked, hand the
-    // saved entry over once the timesheet confirms it was created
+    // hand the entry over once the timesheet confirms it, if "save as template" was ticked
     function captureTemplateOnSave(entryContent, container) {
         const onSuccess = entryContent.options.onSuccess;
         entryContent.options.onSuccess = function (entry) {
@@ -83,7 +75,7 @@
         });
     }
 
-    // Same shape as timeEntryContent's getData()
+    // same shape as timeEntryContent's getData()
     function toRequest(widget, entry, entryId) {
         const hours = Math.floor(entry.DurationInHours);
         const locationId = entry.WorkedFromLocationId;
@@ -109,7 +101,7 @@
         return (response.errors && response.errors.length) ? response.errors.join(' ') : 'The timesheet rejected the change.';
     }
 
-    // Applies the values to an open entry form the way a user would, so its own bindings stay in sync
+    // mimic user input so the form's own bindings stay in sync
     function applyToOpenForm(widget, locationId, sentimentId) {
         const entryContent = widget.entryContent;
         if (!entryContent) return;
@@ -136,7 +128,7 @@
         const failures = [];
         let updated = 0;
 
-        // One at a time, like a user saving each entry
+        // one at a time, like a user saving each entry
         for (const entry of editable) {
             const changed = Object.assign({}, entry);
             if (locationId) {
@@ -154,8 +146,7 @@
             }
         }
 
-        // Bars are unchanged, only their tooltips need the new details. Avoids a re-render that would
-        // drop the highlighted duration of an entry that is being captured.
+        // only tooltips changed, and a re-render would drop a captured entry's highlight
         (widget.existingItems || []).forEach((item, index) => {
             if (entries[index]) item.tooltipster('content', widget._generateExitingTimeEntryTooltipContent(entries[index]));
         });
@@ -199,7 +190,7 @@
         }
 
         entry.EntryId = response.entryId;
-        // Close any open form first (this panel lives inside it), then show the new entry
+        // this panel lives inside the open form, so close it first
         if (widget.entryContent) widget.entryContent.options.onCancel();
         widget._addTimesheetEntry(entry);
         return { ok: true, message: `Added "${template.name}" to the day.` };
