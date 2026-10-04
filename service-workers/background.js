@@ -8,6 +8,7 @@ const baseSetupFiles = [
     "content-scripts/category-pinning-render.js",
     "content-scripts/redesign-render.js",
     "content-scripts/quick-actions-render.js",
+    "content-scripts/stats-render.js",
     "content-scripts/main.js"
 ]
 

@@ -71,6 +71,25 @@ function clearCategoryColor(project, category) {
     syncData()
 }
 
+// requests to the MAIN-world bridges, answered with a tb:result event carrying the same id
+const bridgeRequests = new Map()
+
+document.addEventListener('tb:result', (event) => {
+    const result = JSON.parse(event.detail)
+    const resolve = bridgeRequests.get(result.id)
+    if (!resolve) return
+    bridgeRequests.delete(result.id)
+    resolve(result)
+})
+
+function sendBridgeCommand(command) {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    return new Promise((resolve) => {
+        bridgeRequests.set(id, resolve)
+        document.dispatchEvent(new CustomEvent('tb:command', { detail: JSON.stringify(Object.assign({ id }, command)) }))
+    })
+}
+
 function storeData(dataItem) {
     const existingProject = data.find((item) => item.project === dataItem.project);
 

@@ -404,7 +404,36 @@
         return `${count} ${count === 1 ? 'day' : 'days'}`;
     }
 
+    // raw entries for every day in view, for the stats panel
+    function getStats() {
+        const days = [];
+        document.querySelectorAll('.timeEntry').forEach((element) => {
+            const widget = getWidget(element);
+            if (!widget) return;
+            const date = element.querySelector('.timeEntry-date');
+            const colors = widget.options.colorDictionary || {};
+            days.push({
+                date: formatDate(widget.options.date),
+                label: date && date.firstChild ? date.firstChild.textContent.trim() : formatDate(widget.options.date),
+                isHoliday: !!widget.options.isHoliday,
+                entries: widget.options.timesheetEntries.map((entry) => ({
+                    project: entry.ProjectName,
+                    category: entry.CategoryName,
+                    projectColor: colors[entry.ProjectId],
+                    hours: Number(entry.DurationInHours) || 0,
+                    sentimentId: Number(entry.SentimentId) || 1,
+                    locationId: Number(entry.WorkedFromLocationId) || 0,
+                    billable: !!entry.Billable,
+                    signedOff: !!entry.IsSignedOff,
+                    leave: !!entry.IsLeave
+                }))
+            });
+        });
+        return { ok: true, days: days };
+    }
+
     const handlers = {
+        getStats: getStats,
         bulkEdit: bulkEdit,
         applyTemplate: applyTemplate,
         moveEntry: moveEntry,
@@ -429,7 +458,7 @@
         } catch (e) {
             result = { ok: false, message: e.message || String(e) };
         }
-        emit('tb:result', Object.assign({ id: command.id }, result));
+        emit('tb:result', Object.assign({ id: command.id, type: command.type }, result));
     });
 
     new MutationObserver(tagDaysAndForms).observe(document.body, { childList: true, subtree: true });

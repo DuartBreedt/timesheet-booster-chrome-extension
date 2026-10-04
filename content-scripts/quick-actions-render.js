@@ -30,7 +30,6 @@
     // home until changed in settings
     const DEFAULT_LOCATION_ID = 2;
     let defaultLocationId = DEFAULT_LOCATION_ID;
-    const pendingCommands = new Map();
 
     onDataLoaded.push(() => {
         loadTemplates()
@@ -38,7 +37,6 @@
         renderHeaderActions()
         observeForms()
 
-        document.addEventListener('tb:result', onCommandResult)
         document.addEventListener('tb:template-captured', onTemplateCaptured)
         chrome.storage.onChanged.addListener((changes, area) => {
             if (area === 'local' && changes[STORAGE_KEY_TEMPLATES]) {
@@ -74,22 +72,6 @@
         document.body.append(node)
         setTimeout(() => node.classList.add('tb-toast--leaving'), 3500)
         setTimeout(() => node.remove(), 4000)
-    }
-
-    function sendCommand(command) {
-        const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
-        return new Promise((resolve) => {
-            pendingCommands.set(id, resolve)
-            document.dispatchEvent(new CustomEvent('tb:command', { detail: JSON.stringify(Object.assign({ id }, command)) }))
-        })
-    }
-
-    function onCommandResult(event) {
-        const result = JSON.parse(event.detail)
-        const resolve = pendingCommands.get(result.id)
-        if (!resolve) return;
-        pendingCommands.delete(result.id)
-        resolve(result)
     }
 
     // local not sync: descriptions can push templates past sync's 8kb per-item quota
@@ -428,7 +410,7 @@
             button.disabled = true
             status.className = 'tb-status'
             status.textContent = busyText
-            const result = await sendCommand(Object.assign({ date: day.dataset.tbDate }, command))
+            const result = await sendBridgeCommand(Object.assign({ date: day.dataset.tbDate }, command))
             refreshTotal()
             updateButtons()
             showResult(result, status, close)
@@ -591,7 +573,7 @@
                     date: dateKey,
                     label: pills.querySelector(`[data-date="${dateKey}"]`).textContent
                 }))
-                const result = await sendCommand({ type: 'copyEntry', date: day.dataset.tbDate, targets })
+                const result = await sendBridgeCommand({ type: 'copyEntry', date: day.dataset.tbDate, targets })
                 if (result.ok) selected.clear()
                 syncSelection()
                 showResult(result, status, close)
@@ -682,7 +664,7 @@
                 status.className = 'tb-status'
                 status.textContent = 'Moving entry…'
                 const targetLabel = formatDayLabel(dateInput.value)
-                const result = await sendCommand({ type: 'moveEntry', date: day.dataset.tbDate, targetDate: dateInput.value, targetLabel })
+                const result = await sendBridgeCommand({ type: 'moveEntry', date: day.dataset.tbDate, targetDate: dateInput.value, targetLabel })
                 update()
                 showResult(result, status, close)
             }
@@ -745,7 +727,7 @@
                 addButton.disabled = true
                 status.className = 'tb-status'
                 status.textContent = 'Adding entry…'
-                const result = await sendCommand({ type: 'applyTemplate', date: day.dataset.tbDate, template })
+                const result = await sendBridgeCommand({ type: 'applyTemplate', date: day.dataset.tbDate, template })
                 if (result.ok) toast(result.message)
                 // on success the entry form closes and takes this card with it
                 status.className = `tb-status ${result.ok ? 'tb-status--ok' : 'tb-status--error'}`
