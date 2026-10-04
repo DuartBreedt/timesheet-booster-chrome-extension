@@ -2,105 +2,9 @@
 
 Plan for making Timesheet Booster run on Firefox. Safari is out of scope.
 
-The work is in two parts. The refactor is worth doing on its own because it simplifies the Chrome extension. The Firefox work builds on it.
+The extension declares all its scripts in `manifest.json` and has no background worker, so it is ready for Firefox. Effort: half a day to a day, plus signing.
 
-| Part | Effort |
-| --- | --- |
-| 1. Refactor script loading (Chrome and Firefox) | About half a day |
-| 2. Firefox support | Half a day to a day, plus signing |
-
-## 1. Refactor script loading
-
-### Why
-
-All JavaScript except `theme.js` is injected by `service-workers/background.js`. It listens to `chrome.tabs.onUpdated` and calls `chrome.scripting.executeScript` on every update of every tab. That has a few problems:
-
-- It runs several times per page load (loading, complete, title and favicon updates), which is why every script has a `window.__X_ALREADY_RUN__` guard.
-- It tries to inject into tabs on other sites, where it fails.
-- It needs the `tabs` and `scripting` permissions and a background worker, neither of which Firefox handles the same way. Firefox does not run MV3 `background.service_worker` at all.
-
-Declaring the scripts in `manifest.json` removes the background worker entirely.
-
-### Changes
-
-**Declare every script in the manifest.** All content scripts of an extension share one isolated world per page, so globals from `constants.js` and `setup.js` stay visible to the later files. Keep the current load order.
-
-```json
-"content_scripts": [
-    {
-        "matches": ["https://employee.entelect.co.za/Timesheet*"],
-        "css": [
-            "content-scripts/violations.css",
-            "content-scripts/redesign.css"
-        ],
-        "js": [
-            "constants.js",
-            "content-scripts/theme.js"
-        ],
-        "run_at": "document_start"
-    },
-    {
-        "matches": ["https://employee.entelect.co.za/Timesheet*"],
-        "js": [
-            "content-scripts/setup.js",
-            "content-scripts/icons.js",
-            "content-scripts/palette.js",
-            "content-scripts/projects-and-categories-render.js",
-            "content-scripts/entry-render.js",
-            "content-scripts/category-pinning-render.js",
-            "content-scripts/redesign-render.js",
-            "content-scripts/quick-actions-render.js",
-            "content-scripts/main.js"
-        ],
-        "run_at": "document_idle"
-    },
-    {
-        "matches": ["https://employee.entelect.co.za/Timesheet*"],
-        "js": [
-            "content-scripts/entry-metadata-bridge.js",
-            "content-scripts/day-actions-bridge.js"
-        ],
-        "run_at": "document_idle",
-        "world": "MAIN"
-    }
-]
-```
-
-Notes:
-
-- `constants.js` is only listed once. The second entry reuses its globals.
-- The bridges run at `document_idle` so the page's jQuery and timesheet widgets exist. Both already retry from a `MutationObserver`, so the order between the isolated and MAIN entries doesn't matter.
-- `main.js` already handles `document.readyState`, so `document_idle` needs no changes there.
-
-**Remove the background worker.** Delete `service-workers/background.js` and the `background` key from the manifest. The file also holds unused code (`onMessageCallback`, `dyanmicFetchUrls`).
-
-**Trim permissions.** Keep only `storage`. Remove `tabs`, `scripting`, `webRequest` and `webNavigation`.
-
-**Fix host access.** The current `host_permissions` entry, `https://employee.entelect.co.za/Timesheet`, matches that exact URL only. The `content_scripts` matches grant the access the extension needs, so remove `host_permissions` and use the same pattern everywhere: `https://employee.entelect.co.za/Timesheet*`. The current `https://*.employee.entelect.co.za/...` also matches subdomains, which isn't needed.
-
-**Narrow `web_accessible_resources`.** The SVG icons are loaded into the page with `chrome.runtime.getURL`, so they must stay accessible, but only to the timesheet origin. Change `"matches": ["<all_urls>"]` to `["https://employee.entelect.co.za/*"]`.
-
-**Optional cleanups.**
-
-- The `__X_ALREADY_RUN__` guards are no longer needed. They are harmless and can be removed later.
-- `popup/` isn't referenced by the manifest and `popup.js` uses an undefined `STORAGE_KEY_KEYWORDS`. Delete it unless there are plans for it.
-
-### Minimum Chrome version
-
-`"world": "MAIN"` in `content_scripts` needs Chrome 111. Add `"minimum_chrome_version": "111"`.
-
-### Checking the refactor on Chrome
-
-Reload the extension and confirm, on the live timesheet:
-
-- [ ] Dark mode applies with no light flash on load.
-- [ ] Chips show colours, initials and pins, and the colour popover works.
-- [ ] Captured entries on the day timelines use project and category colours, including after changing week.
-- [ ] Quick Actions, templates, bulk edit, move and copy all work. These depend on the MAIN-world bridges.
-- [ ] The time field drags in 15 minute steps.
-- [ ] No errors in the page console or on the extension's error page.
-
-## 2. Firefox support
+## Firefox support
 
 Requires Firefox 128 or later, the first version with `"world": "MAIN"` for content scripts.
 
@@ -157,8 +61,14 @@ npx web-ext run       # launches Firefox with the extension loaded
 
 Or load it temporarily from `about:debugging#/runtime/this-firefox` (**Load Temporary Add-on**, then pick `manifest.json`). Temporary add-ons are removed when Firefox restarts.
 
-Run the same checklist as for Chrome, plus:
+Reload the extension and confirm, on the live timesheet:
 
+- [ ] Dark mode applies with no light flash on load.
+- [ ] Chips show colours, initials and pins, and the colour popover works.
+- [ ] Captured entries on the day timelines use project and category colours, including after changing week.
+- [ ] Quick Actions, templates, bulk edit, move and copy all work. These depend on the MAIN-world bridges.
+- [ ] The time field drags in 15 minute steps.
+- [ ] No errors in the page console or on the extension's error page.
 - [ ] Granting site access makes the extension start working without a reinstall.
 - [ ] Settings (dark mode, colours, pins, default office) persist across restarts.
 

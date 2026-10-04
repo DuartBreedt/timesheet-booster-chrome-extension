@@ -3,15 +3,9 @@
     "description": "Peronalize your Timesheets!",
     "version": "1.0",
     "manifest_version": 3,
+    "minimum_chrome_version": "111",
     "permissions": [
-        "storage",
-        "tabs",
-        "scripting",
-        "webRequest",
-        "webNavigation"
-    ],
-    "host_permissions": [
-        "https://employee.entelect.co.za/Timesheet"
+        "storage"
     ],
     "icons": {
         "16": "/images/ic_icon.png",
@@ -19,13 +13,10 @@
         "48": "/images/ic_icon.png",
         "128": "/images/ic_icon.png"
     },
-    "background": {
-        "service_worker": "service-workers/background.js"
-    },
     "content_scripts": [
         {
             "matches": [
-                "https://*.employee.entelect.co.za/Timesheet*"
+                "https://employee.entelect.co.za/Timesheet*"
             ],
             "css": [
                 "content-scripts/violations.css",
@@ -36,6 +27,35 @@
                 "content-scripts/theme.js"
             ],
             "run_at": "document_start"
+        },
+        {
+            "matches": [
+                "https://employee.entelect.co.za/Timesheet*"
+            ],
+            "js": [
+                "content-scripts/setup.js",
+                "content-scripts/icons.js",
+                "content-scripts/palette.js",
+                "content-scripts/projects-and-categories-render.js",
+                "content-scripts/entry-render.js",
+                "content-scripts/category-pinning-render.js",
+                "content-scripts/redesign-render.js",
+                "content-scripts/quick-actions-render.js",
+                "content-scripts/stats-render.js",
+                "content-scripts/main.js"
+            ],
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "https://employee.entelect.co.za/Timesheet*"
+            ],
+            "js": [
+                "content-scripts/entry-metadata-bridge.js",
+                "content-scripts/day-actions-bridge.js"
+            ],
+            "run_at": "document_idle",
+            "world": "MAIN"
         }
     ],
     "web_accessible_resources": [
@@ -43,7 +63,7 @@
             "resources": [
                 "icons/*.svg"
             ],
-            "matches": ["<all_urls>"]
+            "matches": ["https://employee.entelect.co.za/*"]
         }
     ]
 }

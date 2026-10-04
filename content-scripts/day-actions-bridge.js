@@ -134,6 +134,8 @@
             const changed = Object.assign({}, entry);
             if (locationId) {
                 changed.WorkedFromLocationId = locationId;
+                // the entry form's radios are bound to the default, so it must follow the id
+                changed.WorkedFromLocationDefault = locationId;
                 changed.WorkedFromHome = locationId === LOCATION_HOME;
             }
             if (sentimentId) changed.SentimentId = sentimentId;

@@ -17,18 +17,17 @@ Do not use: frameworks (React, Vue, etc.), npm packages or bundlers, TypeScript,
 
 ## Architecture
 
-- `manifest.json`: loads the CSS and `theme.js` at `document_start` so styles and dark mode apply before first paint.
-- `service-workers/background.js`: injects everything else on tab updates, in two lists: isolated world (`baseSetupFiles`) and MAIN world (`mainWorldSetupFiles`). Order matters.
+- `manifest.json`: declares every script. The CSS and `theme.js` load at `document_start` so styles and dark mode apply before first paint. The rest load at `document_idle` in two `content_scripts` entries: isolated world, then MAIN world (`"world": "MAIN"`). Order within an entry matters. There is no background worker.
 - `constants.js`: selectors and storage keys.
 - `content-scripts/setup.js`: shared state and the `onDataLoaded` / `on*Changed` hook arrays. `main.js` loads stored data and fires the hooks, so it stays last.
-- `content-scripts/*-render.js`: isolated-world features. New features go in a new or existing render script, registered in `baseSetupFiles` before `main.js`.
+- `content-scripts/*-render.js`: isolated-world features. New features go in a new or existing render script, registered in the isolated world entry of `manifest.json` before `main.js`.
 - `content-scripts/*-bridge.js`: MAIN world scripts that drive the timesheet's widgets and endpoints. The isolated world talks to them with `tb:*` CustomEvents carrying JSON strings, and they tag the DOM with `data-tb-*` attributes.
 - `content-scripts/redesign.css`, `violations.css`: all styling, including dark mode under `html.tb-dark`.
 - `docs/`: README screenshots and plans (for example `docs/firefox-port.md`).
 
 ## Conventions
 
-- Wrap each injected script in an IIFE with a `window.__NAME_ALREADY_RUN__` guard, since it can be injected more than once per page.
+- Wrap each injected script in an IIFE with a `window.__NAME_ALREADY_RUN__` guard, as a safeguard against double injection.
 - Prefix everything we add: `tb-` classes, `data-tb-*` attributes, `--tb-*` CSS variables, `tb:*` events.
 - JS sets classes, data attributes and CSS variables. Visual styling lives in the CSS.
 - CSS selectors start with `html` and use `!important` where needed: manifest CSS loads before the page's own, and Knockout writes inline styles.

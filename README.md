@@ -88,8 +88,7 @@ There is no build step: the extension is plain JavaScript and CSS, loaded straig
 
 | Path | What lives there |
 | --- | --- |
-| `manifest.json` | Extension config (Manifest V3) |
-| `service-workers/background.js` | Injects the content scripts whenever a timesheet tab loads or navigates |
+| `manifest.json` | Extension config (Manifest V3), including the content script load order |
 | `content-scripts/redesign.css`, `violations.css` | The redesign, dark mode and chip styles, loaded before the page paints |
 | `content-scripts/theme.js` | Applies dark mode early and keeps tabs in sync |
 | `content-scripts/*-render.js` | The UI: chips, colours, pinning, timelines, Quick Actions, templates and settings |
