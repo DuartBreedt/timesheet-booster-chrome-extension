@@ -67,7 +67,7 @@ html .row-fluid:has(> .span9 [data-bind='foreach: visibleProjects']) {
     align-items: flex-start;
     gap: 24px;
     margin: 8px 0 28px;
-    /* room for the timesheet's help/settings side buttons */
+    /* room for timesheets' help/settings side buttons */
     box-sizing: border-box;
     padding-right: 52px;
 }
@@ -1198,7 +1198,7 @@ html .timeEntry-content-input-block {
     margin: 0;
 }
 
-/* the timesheet pads worked from with inline styles and a trailing <br> */
+/* timesheets pads worked from with inline styles and a trailing <br> */
 html .timeEntry-content-input-block:has([data-bind="foreach: locations"]) {
     padding-top: 0 !important;
 }
@@ -1285,7 +1285,7 @@ html .tb-form-buttons .timeEntry-content-buttons {
     margin: 0;
 }
 
-/* the timesheet squares these off with .noborder and fixed widths */
+/* timesheets squares these off with .noborder and fixed widths */
 html .timeEntry-content .btn.btn-flat {
     width: auto;
     min-width: 150px;
@@ -1335,7 +1335,7 @@ html .timeEntry-content .textcheckbox {
     border-radius: 8px;
 }
 
-/* swap the timesheet's dark png faces for outline faces in theme colors */
+/* swap timesheets' dark png faces for outline faces in theme colors */
 html .timeEntry-content .sentiment-button {
     position: relative;
     width: 40px;
@@ -1956,7 +1956,7 @@ html.tb-dark .timesheet-section .timesheetlistitem.tb-active {
     filter: saturate(0.8);
 }
 
-/* The timesheet's own white text on colored bars and buttons */
+/* Timesheets' own white text on colored bars and buttons */
 html.tb-dark .timeEntry-capturedTime,
 html.tb-dark .timeEntry-banner,
 html.tb-dark .textcheckbox {

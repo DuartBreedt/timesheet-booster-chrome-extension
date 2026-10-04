@@ -68,7 +68,7 @@ The extension isn't on the Chrome Web Store, so it is installed from source. Thi
 4. Click **Load unpacked** and select the project folder (the one containing `manifest.json`).
 5. Open the [timesheet](https://employee.entelect.co.za/Timesheet).
 
-**Updating:** pull the latest changes (or download the ZIP again into the same folder), then click the reload icon on the Timesheet Booster card in your extensions page and refresh the timesheet.
+**Updating:** pull the latest changes (or download the ZIP again into the same folder), then click the reload icon on the Timesheet Booster card in your extensions page and refresh timesheets.
 
 > Don't delete or move the folder after installing. The browser loads the extension from it every time.
 
@@ -80,7 +80,7 @@ The extension isn't on the Chrome Web Store, so it is installed from source. Thi
 
 1. Fork the repository and clone your fork.
 2. Load it as an unpacked extension (see [Installing](#installing-on-chromium-browsers)).
-3. Make your changes, click reload on the extension card, then refresh the timesheet to see them.
+3. Make your changes, click reload on the extension card, then refresh timesheets to see them.
 
 There is no build step: the extension is plain JavaScript and CSS, loaded straight from the folder.
 
@@ -92,10 +92,10 @@ There is no build step: the extension is plain JavaScript and CSS, loaded straig
 | `content-scripts/redesign.css`, `violations.css` | The redesign, dark mode and chip styles, loaded before the page paints |
 | `content-scripts/theme.js` | Applies dark mode early and keeps tabs in sync |
 | `content-scripts/*-render.js` | The UI: chips, colours, pinning, timelines, Quick Actions, templates and settings |
-| `content-scripts/*-bridge.js` | Run in the page's own context to drive the timesheet's widgets and read entry details |
+| `content-scripts/*-bridge.js` | Run in the page's own context to drive timesheets' widgets and read entry details |
 | `constants.js` | Shared selectors and storage keys |
 
-Most features run in the extension's isolated world. Anything that needs the timesheet's own jQuery or widgets goes through a bridge script that runs in the page, and the two talk via `tb:*` DOM events.
+Most features run in the extension's isolated world. Anything that needs timesheets' own jQuery or widgets goes through a bridge script that runs in the page, and the two talk via `tb:*` DOM events.
 
 
 

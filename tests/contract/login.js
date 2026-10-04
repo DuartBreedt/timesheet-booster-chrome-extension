@@ -9,7 +9,7 @@ const { TIMESHEET_URL, AUTH_STATE } = require('./fixtures')
     const page = await context.newPage()
     await page.goto(TIMESHEET_URL)
 
-    console.log('Sign in to the timesheet in the browser window. It closes once the timesheet has loaded.')
+    console.log('Sign in to timesheets in the browser window. It closes once timesheets have loaded.')
     await page.waitForSelector('.timeEntry .timeEntry-entry', { timeout: 5 * 60 * 1000 })
 
     fs.mkdirSync(path.dirname(AUTH_STATE), { recursive: true })

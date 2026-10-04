@@ -3,7 +3,7 @@
 A Chromium extension used by Entelect employees on the internal timesheet (`https://employee.entelect.co.za/Timesheet`). It restyles the page (redesign, dark mode, custom colours, pinned categories) and adds shortcuts for capturing time (bulk edit, move and copy entries, templates).
 
 Constraints:
-- The timesheet is the source of truth. Entries are only created, edited or deleted through the timesheet's own forms and endpoints, the way a user would. Signed-off entries are never changed.
+- Timesheets are the source of truth. Entries are only created, edited or deleted through timesheets' own forms and endpoints, the way a user would. Signed-off entries are never changed.
 - The site is not ours. Work with its DOM and widgets as they are, and degrade quietly if something isn't found.
 - Data stays in the user's browser. No external services, analytics or remote code.
 
@@ -21,7 +21,7 @@ Do not use: frameworks (React, Vue, etc.), npm packages or bundlers, TypeScript,
 - `constants.js`: selectors and storage keys.
 - `content-scripts/setup.js`: shared state and the `onDataLoaded` / `on*Changed` hook arrays. `main.js` loads stored data and fires the hooks, so it stays last.
 - `content-scripts/*-render.js`: isolated-world features. New features go in a new or existing render script, registered in the isolated world entry of `manifest.json` before `main.js`.
-- `content-scripts/*-bridge.js`: MAIN world scripts that drive the timesheet's widgets and endpoints. The isolated world talks to them with `tb:*` CustomEvents carrying JSON strings, and they tag the DOM with `data-tb-*` attributes.
+- `content-scripts/*-bridge.js`: MAIN world scripts that drive timesheets' widgets and endpoints. The isolated world talks to them with `tb:*` CustomEvents carrying JSON strings, and they tag the DOM with `data-tb-*` attributes.
 - `content-scripts/redesign.css`, `violations.css`: all styling, including dark mode under `html.tb-dark`.
 - `docs/`: README screenshots and plans (for example `docs/firefox-port.md`).
 
@@ -39,5 +39,5 @@ Do not use: frameworks (React, Vue, etc.), npm packages or bundlers, TypeScript,
 There are no automated tests or build.
 
 1. `node --check <file>` on changed JS files.
-2. Reload the extension at `chrome://extensions`, then refresh the timesheet.
+2. Reload the extension at `chrome://extensions`, then refresh timesheets.
 3. Check light and dark mode, and days with signed-off entries.

@@ -73,7 +73,7 @@
         document.addEventListener('mouseout', handleEntryMouseOut);
         document.addEventListener('click', handleEntryClicked);
 
-        // the bridge tags captured times after the timesheet re-renders them
+        // the bridge tags captured times after timesheets re-render them
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => styleCapturedEntry(mutation.target))
         });
@@ -94,7 +94,7 @@
         const category = capturedTime.dataset.tbCategory
         if (project === undefined || category === undefined) return;
 
-        // remember the timesheet's own color so it can be restored later
+        // remember timesheets' own color so it can be restored later
         if (capturedTime.dataset.tbOriginalColor === undefined) {
             capturedTime.dataset.tbOriginalColor = capturedTime.style.backgroundColor
         }

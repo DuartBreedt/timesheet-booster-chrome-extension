@@ -1,4 +1,4 @@
-// includes the timesheet's 12 defaults (see getColor in its site script), the rest are muted to match
+// includes timesheets' 12 defaults (see getColor in its site script), the rest are muted to match
 TB_PALETTE = [
     { name: 'Brick', hex: '#994748' },
     { name: 'Terracotta', hex: '#c05d53' },

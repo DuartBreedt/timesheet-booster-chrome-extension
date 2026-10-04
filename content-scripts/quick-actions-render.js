@@ -6,7 +6,7 @@
     }
     window.__QUICK_ACTIONS_RENDER_SCRIPT_ALREADY_RUN__ = true;
 
-    // ids match the timesheet's own values
+    // ids match timesheets' own values
     const LOCATIONS = [
         { id: 2, name: 'Home', icon: 'home' },
         { id: 3, name: 'Entelect', icon: 'building' },
@@ -14,7 +14,7 @@
         { id: 5, name: 'Other', icon: 'dots' }
     ];
     const SENTIMENTS = [
-        // same order as the timesheet's own sentiment buttons
+        // same order as timesheets' own sentiment buttons
         { id: 3, name: 'Sad', icon: 'frown', buttonClass: 'sentiment-sad' },
         { id: 1, name: 'Neutral', icon: 'meh', buttonClass: 'sentiment-neutral' },
         { id: 2, name: 'Happy', icon: 'smile', buttonClass: 'sentiment-happy' }

@@ -1,4 +1,4 @@
-// The extension's read-only features on the live timesheet. Nothing here saves or deletes entries.
+// The extension's read-only features on the live timesheets. Nothing here saves or deletes entries.
 const { test, expect, bridge, extensionConstants } = require('./fixtures')
 
 const C = extensionConstants()
@@ -10,7 +10,7 @@ async function openNewEntry(page) {
     return container
 }
 
-test.describe('extension on the live timesheet', () => {
+test.describe('extension on the live timesheets', () => {
     test('header and chips', async ({ page }) => {
         await expect(page.locator('#nav-title')).toBeHidden()
         await expect(page.locator('.tb-header .tb-title')).toHaveText('Timesheet Capture')

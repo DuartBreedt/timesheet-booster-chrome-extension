@@ -1,4 +1,4 @@
-// What the extension relies on in the timesheet itself. Runs without the extension and never saves anything.
+// What the extension relies on in timesheets itself. Runs without the extension and never saves anything.
 const { test, expect, bridgeRequestKeys, extensionConstants } = require('./fixtures')
 
 const C = extensionConstants()
@@ -170,7 +170,7 @@ test.describe('timesheet page contract', () => {
             const source = String(window.timeEntryContent)
             return expected.filter((key) => !new RegExp(`\\b${key}\\s*:`).test(source))
         }, keys)
-        expect(missing, 'fields the extension posts that the timesheet no longer sends').toEqual([])
+        expect(missing, 'fields the extension posts that timesheets no longer send').toEqual([])
     })
 
     test('save responses keep their shape', async ({ page }) => {

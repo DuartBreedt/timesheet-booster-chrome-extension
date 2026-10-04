@@ -1,4 +1,4 @@
-// main world so it can drive the timesheet's own $.fn.timeEntry widgets and jquery
+// main world so it can drive timesheets' own $.fn.timeEntry widgets and jquery
 (function () {
     'use strict';
 
@@ -8,7 +8,7 @@
     window.__DAY_ACTIONS_BRIDGE_ALREADY_RUN__ = true;
 
     const LOCATION_HOME = 2;
-    // mirrors the options the timesheet's own entry form posts
+    // mirrors the options timesheets' own entry form posts
     const LOCATIONS = [
         { name: "Home", value: 2 },
         { name: "Entelect", value: 3 },
@@ -54,7 +54,7 @@
         });
     }
 
-    // hand the entry over once the timesheet confirms it, if "save as template" was ticked
+    // hand the entry over once timesheets confirm it, if "save as template" was ticked
     function captureTemplateOnSave(entryContent, container) {
         const onSuccess = entryContent.options.onSuccess;
         entryContent.options.onSuccess = function (entry) {
@@ -99,7 +99,7 @@
     }
 
     function errorText(response) {
-        return (response.errors && response.errors.length) ? response.errors.join(' ') : 'The timesheet rejected the change.';
+        return (response.errors && response.errors.length) ? response.errors.join(' ') : 'Timesheets rejected the change.';
     }
 
     // mimic user input so the form's own bindings stay in sync
@@ -120,7 +120,7 @@
 
     async function bulkEdit(command) {
         const widget = getDayWidget(command.date);
-        if (!widget) return { ok: false, message: 'Could not find that day on the timesheet.' };
+        if (!widget) return { ok: false, message: 'Could not find that day on timesheets.' };
 
         const locationId = command.locationId ? Number(command.locationId) : undefined;
         const sentimentId = command.sentimentId ? Number(command.sentimentId) : undefined;
@@ -165,7 +165,7 @@
 
     async function applyTemplate(command) {
         const widget = getDayWidget(command.date);
-        if (!widget) return { ok: false, message: 'Could not find that day on the timesheet.' };
+        if (!widget) return { ok: false, message: 'Could not find that day on timesheets.' };
 
         const template = command.template;
         const locationId = Number(template.workedFromLocationId);
@@ -302,7 +302,7 @@
     // Moves every entry that isn't signed off, each one copy-then-delete like moveEntry
     async function moveDay(command) {
         const widget = getDayWidget(command.date);
-        if (!widget) return { ok: false, message: 'Could not find that day on the timesheet.' };
+        if (!widget) return { ok: false, message: 'Could not find that day on timesheets.' };
         if (!command.targetDate || command.targetDate === command.date) {
             return { ok: false, message: 'Pick a different day to move the entries to.' };
         }
@@ -346,7 +346,7 @@
 
     async function deleteDay(command) {
         const widget = getDayWidget(command.date);
-        if (!widget) return { ok: false, message: 'Could not find that day on the timesheet.' };
+        if (!widget) return { ok: false, message: 'Could not find that day on timesheets.' };
         const deletable = widget.options.timesheetEntries.filter((entry) => !entry.IsSignedOff);
         if (!deletable.length) return { ok: false, message: 'There are no entries on this day that can be deleted.' };
 

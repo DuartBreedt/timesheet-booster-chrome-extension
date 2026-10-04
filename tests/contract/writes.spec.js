@@ -42,7 +42,7 @@ test.describe('writes', () => {
         usedDays = [a, b]
         const dayA = page.locator(`.timeEntry[data-tb-date="${a}"]`)
 
-        // created through the timesheet's own form, like a user would
+        // created through timesheets' own form, like a user would
         await dayA.locator('.timeEntry-quaterhour[item-number="4"]').click()
         const form = dayA.locator('.timeEntry-container')
         await form.locator('.timeEntry-content textarea').fill(DESCRIPTION)

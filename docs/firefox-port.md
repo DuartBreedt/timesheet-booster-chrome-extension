@@ -48,7 +48,7 @@ Everything used is supported in Firefox 128: `:has()`, `color-mix()`, `mask`, `<
 
 - The date inputs (Move Entry, Copy to Other Days and Bulk Edit Day) use Firefox's own picker and look different.
 - Select chevrons and `appearance: none`.
-- Content-script CSS against the page's own CSS. Every selector in `redesign.css` starts with `html` so it wins ties against the timesheet's rules. Confirm nothing regresses.
+- Content-script CSS against the page's own CSS. Every selector in `redesign.css` starts with `html` so it wins ties against timesheets' rules. Confirm nothing regresses.
 
 ### Developing and testing
 
@@ -61,7 +61,7 @@ npx web-ext run       # launches Firefox with the extension loaded
 
 Or load it temporarily from `about:debugging#/runtime/this-firefox` (**Load Temporary Add-on**, then pick `manifest.json`). Temporary add-ons are removed when Firefox restarts.
 
-Reload the extension and confirm, on the live timesheet:
+Reload the extension and confirm, on the live timesheets:
 
 - [ ] Dark mode applies with no light flash on load.
 - [ ] Chips show colours, initials and pins, and the colour popover works.
