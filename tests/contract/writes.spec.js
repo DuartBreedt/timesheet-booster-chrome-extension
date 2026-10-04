@@ -1,4 +1,4 @@
-// Creates, edits, copies, moves and deletes a throwaway entry on the real timesheet.
+// Creates, edits, copies, moves and deletes a throwaway entry on the real timesheets.
 // Opt-in only (TB_ALLOW_WRITES=1). It uses two empty days in view and always clears them afterwards.
 const { test, expect, bridge } = require('./fixtures')
 
@@ -21,7 +21,7 @@ async function openSavedEntry(page, date) {
 }
 
 test.describe('writes', () => {
-    test.skip(!process.env.TB_ALLOW_WRITES, 'Writes to the real timesheet. Set TB_ALLOW_WRITES=1 to run.')
+    test.skip(!process.env.TB_ALLOW_WRITES, 'Writes to the real timesheets. Set TB_ALLOW_WRITES=1 to run.')
 
     let usedDays = []
 

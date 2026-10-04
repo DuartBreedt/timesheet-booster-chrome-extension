@@ -38,7 +38,7 @@ npx playwright show-report            # details and traces of failures
 npm run test:contract:writes
 ```
 
-These write to your real timesheet. They pick two days in view with no entries, weekends first, and delete everything on those days afterwards, even when a step fails. The entry description is "Timesheet Booster contract test, safe to delete", so leftovers are easy to spot if a run is killed part way. They are skipped unless `TB_ALLOW_WRITES=1` is set, which the script does for you.
+These write to your real timesheets. They pick two days in view with no entries, weekends first, and delete everything on those days afterwards, even when a step fails. The entry description is "Timesheet Booster contract test, safe to delete", so leftovers are easy to spot if a run is killed part way. They are skipped unless `TB_ALLOW_WRITES=1` is set, which the script does for you.
 
 ## Other settings
 

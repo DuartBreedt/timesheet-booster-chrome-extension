@@ -1,6 +1,6 @@
 # Timesheet Booster
 
-A Chrome extension for the [Entelect timesheet](https://employee.entelect.co.za/Timesheet). It restyles the page and adds shortcuts for capturing time.
+A Chrome extension for the [Entelect timesheets](https://employee.entelect.co.za/Timesheet). It restyles the page and adds shortcuts for capturing time.
 
 ![Timesheet Booster overview](docs/screenshots/overview.png)
 
@@ -8,7 +8,7 @@ A Chrome extension for the [Entelect timesheet](https://employee.entelect.co.za/
 
 ### Dark mode
 
-Toggled from the header. The setting is saved and applies to all open timesheet tabs.
+Toggled from the header. The setting is saved and applies to all open timesheets tabs.
 
 ![Dark mode](docs/screenshots/dark-mode.png)
 
@@ -66,7 +66,7 @@ The extension isn't on the Chrome Web Store, so it is installed from source. Thi
 
 3. Turn on **Developer mode** (a toggle in the top right, or in the left sidebar on Edge).
 4. Click **Load unpacked** and select the project folder (the one containing `manifest.json`).
-5. Open the [timesheet](https://employee.entelect.co.za/Timesheet).
+5. Open [timesheets](https://employee.entelect.co.za/Timesheet).
 
 **Updating:** pull the latest changes (or download the ZIP again into the same folder), then click the reload icon on the Timesheet Booster card in your extensions page and refresh timesheets.
 

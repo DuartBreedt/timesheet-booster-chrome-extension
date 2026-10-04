@@ -1,6 +1,6 @@
 # Timesheet Booster
 
-A Chromium extension used by Entelect employees on the internal timesheet (`https://employee.entelect.co.za/Timesheet`). It restyles the page (redesign, dark mode, custom colours, pinned categories) and adds shortcuts for capturing time (bulk edit, move and copy entries, templates).
+A Chromium extension used by Entelect employees on the internal timesheets portal (`https://employee.entelect.co.za/Timesheet`). It restyles the page (redesign, dark mode, custom colours, pinned categories) and adds shortcuts for capturing time (bulk edit, move and copy entries, templates).
 
 Constraints:
 - Timesheets are the source of truth. Entries are only created, edited or deleted through timesheets' own forms and endpoints, the way a user would. Signed-off entries are never changed.

@@ -8,7 +8,7 @@ const AUTH_STATE = path.join(ROOT, '.auth/state.json')
 const TIMESHEET_URL = process.env.TB_TIMESHEET_URL || 'https://employee.entelect.co.za/Timesheet'
 
 const test = base.extend({
-    // false runs the bare timesheet, which the page contract needs
+    // false runs the bare timesheets, which the page contract needs
     extension: [true, { option: true }],
 
     context: async ({ extension }, use) => {
